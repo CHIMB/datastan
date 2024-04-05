@@ -3,7 +3,7 @@
 #' The error_handle() function is an exception/error handling function that will log error messages and print
 #' these messages to an output log, allowing the user to read and see what went wrong in the program, allowing
 #' them to hopefully understand and make corrections to a specific datasets metadata
-#' @param metadata_conn A database connection that is used in addition to the dataset_id, passed from the standardize_data() function. Is also used in the pre_process_data(), and pre_process_chunks() functions.
+#' @param standardization_rules_metadata A database connection that is used in addition to the dataset_id, passed from the standardize_data() function. Is also used in the pre_process_data(), and pre_process_chunks() functions.
 #' @param err_msg An error message indicated what went wrong in the program, this message will be written to an output .txt file and placed in a folder containing error messages
 #' @param cleaned_file A database connection to the sqlite file holding the currently processed dataset that was being written to at the time of error.
 #' @param error_file_path A path to the input file.
@@ -11,7 +11,7 @@
 #' @examples
 #' error_handle(db, "Invalid Dataset Code - Stopping Program", clean_db, "path/to/file.txt", "path/to/folder");
 #' @export
-error_handle <- function(metadata_conn, err_msg, cleaned_file, error_file_path, error_folder_path){
+error_handle <- function(standardization_rules_metadata, err_msg, cleaned_file, error_file_path, error_folder_path){
   print(paste("Error Message:", err_msg))
 
   # Create a new error file and write the error message to the file
@@ -22,8 +22,8 @@ error_handle <- function(metadata_conn, err_msg, cleaned_file, error_file_path, 
     writeLines(err_msg, text_file_path)
   }
 
-  if(!is.null(metadata_conn)){
-    dbDisconnect(metadata_conn)
+  if(!is.null(standardization_rules_metadata)){
+    dbDisconnect(standardization_rules_metadata)
   }
 
   if(!is.null(cleaned_file)){
@@ -42,20 +42,20 @@ error_handle <- function(metadata_conn, err_msg, cleaned_file, error_file_path, 
 #' @param input_dataset_code A dataset_code, used in the query statement within the function which will get the desired dataset code. File names meant to be pre-processed should contain a prefix containing the dataset code kept in the metadata, separated by something like a hyphen, underscore, etc.
 #' @param input_flags A lookup table containing manually set or default values used by the flag script which will use the values of the flags to determine how to pre-process and output the health data.
 #' @param output_folder An output folder that the successfully cleaned data ready for linkage will be placed in once pre-processing is complete.
-#' @param metadata_file A path to a metadata file.
+#' @param standardization_rules_metadata A path to a standardization rules metadata file.
 #' @return A cleaned data frame containing the cleaned table from pre_process_chunks() returned database (as long as file size is <1GB)
 #' @examples
 #' clean_df <- standardize_data("path/to/file.txt", "fakecode", flag_lookup, "path/to/folder", "path/to/metadata.sqlite")
 #' @export
-standardize_data <- function(input_file_path, input_dataset_code, input_flags, output_folder, metadata_file){
+standardize_data <- function(input_file_path, input_dataset_code, input_flags, output_folder, standardization_rules_metadata){
 
   # Put the pre_process_chunks() function in here so that user has no need to call it
   #----------------------------------------------------------------------------#
-  pre_process_chunks <- function(file_path, dataset_metadata_conn, dataset_id, flag_lookup_table, output_folder, dataset_code){
+  pre_process_chunks <- function(file_path, standardization_rules_metadata_conn, dataset_id, flag_lookup_table, output_folder, dataset_code){
 
     # Put the pre_process_data function in here so that the user has no need to call it
     #----------------------------------------------------------------------------#
-    pre_process_data <- function(source_data_frame, split_source_fields, db_conn, dataset_to_standardize,
+    pre_process_data <- function(source_data_frame, split_source_fields, standardization_rules_db, dataset_to_standardize,
                                  standardized_name_lookup_table, standardized_function_lookup_table,
                                  flag_lookup){
 
@@ -438,7 +438,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
           # Check for compound character records
           check_compound_records_query <- paste("SELECT * FROM compound_fields where source_field_id = ?;")
-          compound_records <- dbSendQuery(db_conn, check_compound_records_query)
+          compound_records <- dbSendQuery(standardization_rules_db, check_compound_records_query)
           dbBind(compound_records, list(curr_source_field_id))
           output_compound_records <- dbFetch(compound_records)
           compound_field_format_id <- output_compound_records$compound_field_format_id
@@ -452,7 +452,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             get_separators_query <- paste("SELECT separator FROM compound_field_separators
                                             WHERE compound_field_format_id = ? and separator is not NULL
                                             ORDER BY separator_order asc;")
-            compound_field_separators <- dbSendQuery(db_conn, get_separators_query)
+            compound_field_separators <- dbSendQuery(standardization_rules_db, get_separators_query)
             dbBind(compound_field_separators, list(compound_field_format_id))
             separator_output <- dbFetch(compound_field_separators)
             dbClearResult(compound_field_separators)
@@ -461,7 +461,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             get_separators_query <- paste("SELECT substring_index FROM compound_field_separators
                                             WHERE compound_field_format_id = ? and substring_index is not NULL
                                             ORDER BY separator_order asc;")
-            compound_field_indexes <- dbSendQuery(db_conn, get_separators_query)
+            compound_field_indexes <- dbSendQuery(standardization_rules_db, get_separators_query)
             dbBind(compound_field_indexes, list(compound_field_format_id))
             index_output <- dbFetch(compound_field_indexes)
             dbClearResult(compound_field_indexes)
@@ -486,7 +486,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
                                                       LEFT JOIN destination_fields df on cfd.destination_field_id = df.destination_field_id
                                                       WHERE compound_field_format_id = ?
                                                       ORDER BY destination_mapping_order asc;")
-            compound_field_destination_names <- dbSendQuery(db_conn, get_destination_field_names_query)
+            compound_field_destination_names <- dbSendQuery(standardization_rules_db, get_destination_field_names_query)
             dbBind(compound_field_destination_names, list(compound_field_format_id))
             compound_field_names_output <- dbFetch(compound_field_destination_names)
             dbClearResult(compound_field_destination_names)
@@ -666,7 +666,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
                          "FROM categorical_fields cf",
                          "JOIN categorical_values cv ON cf.standardized_value_id = cv.standardized_value_id",
                          "WHERE cf.source_field_id = ", curr_source_field_id)
-          dataset_gender_vals <- dbSendQuery(db_conn, query)
+          dataset_gender_vals <- dbSendQuery(standardization_rules_db, query)
           gender_vals <- dbFetch(dataset_gender_vals)
           dbClearResult(dataset_gender_vals)
 
@@ -892,7 +892,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
                          "FROM categorical_fields cf",
                          "JOIN categorical_values cv ON cf.standardized_value_id = cv.standardized_value_id",
                          "WHERE cf.source_field_id = ", curr_source_field_id)
-          dataset_province_vals <- dbSendQuery(db_conn, query)
+          dataset_province_vals <- dbSendQuery(standardization_rules_db, query)
           province_vals <- dbFetch(dataset_province_vals)
           dbClearResult(dataset_province_vals)
 
@@ -1034,7 +1034,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
           # Check for compound character records
           check_compound_records_query <- paste("SELECT * FROM compound_fields where source_field_id = ?;")
-          compound_records <- dbSendQuery(db_conn, check_compound_records_query)
+          compound_records <- dbSendQuery(standardization_rules_db, check_compound_records_query)
           dbBind(compound_records, list(curr_source_field_id))
           output_compound_records <- dbFetch(compound_records)
           compound_field_format_id <- output_compound_records$compound_field_format_id
@@ -1048,7 +1048,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             get_separators_query <- paste("SELECT separator FROM compound_field_separators
                                             WHERE compound_field_format_id = ? and separator is not NULL
                                             ORDER BY separator_order asc;")
-            compound_field_separators <- dbSendQuery(db_conn, get_separators_query)
+            compound_field_separators <- dbSendQuery(standardization_rules_db, get_separators_query)
             dbBind(compound_field_separators, list(compound_field_format_id))
             separator_output <- dbFetch(compound_field_separators)
             dbClearResult(compound_field_separators)
@@ -1057,7 +1057,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             get_separators_query <- paste("SELECT substring_index FROM compound_field_separators
                                             WHERE compound_field_format_id = ? and substring_index is not NULL
                                             ORDER BY separator_order asc;")
-            compound_field_indexes <- dbSendQuery(db_conn, get_separators_query)
+            compound_field_indexes <- dbSendQuery(standardization_rules_db, get_separators_query)
             dbBind(compound_field_indexes, list(compound_field_format_id))
             index_output <- dbFetch(compound_field_indexes)
             dbClearResult(compound_field_indexes)
@@ -1082,7 +1082,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
                                                       LEFT JOIN destination_fields df on cfd.destination_field_id = df.destination_field_id
                                                       WHERE compound_field_format_id = ?
                                                       ORDER BY destination_mapping_order asc;")
-            compound_field_destination_names <- dbSendQuery(db_conn, get_destination_field_names_query)
+            compound_field_destination_names <- dbSendQuery(standardization_rules_db, get_destination_field_names_query)
             dbBind(compound_field_destination_names, list(compound_field_format_id))
             compound_field_names_output <- dbFetch(compound_field_destination_names)
             dbClearResult(compound_field_destination_names)
@@ -1258,7 +1258,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
           # Check for compound character records
           check_compound_records_query <- paste("SELECT * FROM compound_fields where source_field_id = ?;")
-          compound_records <- dbSendQuery(db_conn, check_compound_records_query)
+          compound_records <- dbSendQuery(standardization_rules_db, check_compound_records_query)
           dbBind(compound_records, list(curr_source_field_id))
           output_compound_records <- dbFetch(compound_records)
           dbClearResult(compound_records)
@@ -1270,7 +1270,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           get_separators_query <- paste("SELECT separator FROM compound_field_separators
                                             WHERE compound_field_format_id = ?
                                             ORDER BY separator_order asc;")
-          compound_field_separators <- dbSendQuery(db_conn, get_separators_query)
+          compound_field_separators <- dbSendQuery(standardization_rules_db, get_separators_query)
           dbBind(compound_field_separators, list(compound_field_format_id))
           separator_output <- dbFetch(compound_field_separators)
           dbClearResult(compound_field_separators)
@@ -1288,7 +1288,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
                                                       LEFT JOIN destination_fields df on cfd.destination_field_id = df.destination_field_id
                                                       WHERE compound_field_format_id = ?
                                                       ORDER BY destination_mapping_order asc;")
-          compound_field_destination_names <- dbSendQuery(db_conn, get_destination_field_names_query)
+          compound_field_destination_names <- dbSendQuery(standardization_rules_db, get_destination_field_names_query)
           dbBind(compound_field_destination_names, list(compound_field_format_id))
           compound_field_names_output <- dbFetch(compound_field_destination_names)
           dbClearResult(compound_field_destination_names)
@@ -1322,7 +1322,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
           # Check for numeric records
           check_numeric_records_query <- paste("SELECT * FROM numeric_date_fields where source_field_id = ?;")
-          numeric_records <- dbSendQuery(db_conn, check_numeric_records_query)
+          numeric_records <- dbSendQuery(standardization_rules_db, check_numeric_records_query)
           dbBind(numeric_records, list(curr_source_field_id))
           output_numeric_records <- dbFetch(numeric_records)
           numeric_date_format_id <- output_numeric_records$numeric_date_format_id
@@ -1333,7 +1333,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             # Get the numeric format of the dataset, which includes the origin date,
             # unit of time measurement, etc.
             get_numeric_format_query <- paste("SELECT * FROM numeric_date_formats where numeric_date_format_id = ?;")
-            numeric_format <- dbSendQuery(db_conn, get_numeric_format_query)
+            numeric_format <- dbSendQuery(standardization_rules_db, get_numeric_format_query)
             dbBind(numeric_format, list(numeric_date_format_id))
             output_numeric_format <- dbFetch(numeric_format)
             origin_date      <- output_numeric_format$origin_date
@@ -1372,7 +1372,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
                                                       JOIN destination_fields df on ndd.destination_field_id = df.destination_field_id
                                                       WHERE numeric_destination_type = ?
                                                       ORDER BY destination_mapping_order asc;")
-            compound_field_destination_names <- dbSendQuery(db_conn, get_destination_field_names_query)
+            compound_field_destination_names <- dbSendQuery(standardization_rules_db, get_destination_field_names_query)
             dbBind(compound_field_destination_names, list(destination_field_type))
             compound_field_names_output <- dbFetch(compound_field_destination_names)
             dbClearResult(compound_field_destination_names)
@@ -1482,7 +1482,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
     total_rows_read <- reactiveVal()
 
     # Get the important source fields
-    chosen_fields <- dbSendQuery(dataset_metadata_conn, 'SELECT * FROM source_fields WHERE dataset_id = $chosen_dataset ORDER BY field_order asc;')
+    chosen_fields <- dbSendQuery(standardization_rules_metadata_conn, 'SELECT * FROM source_fields WHERE dataset_id = $chosen_dataset ORDER BY field_order asc;')
     dbBind(chosen_fields, list(chosen_dataset=dataset_id))
     output_fields <- dbFetch(chosen_fields)
     dbClearResult(chosen_fields)
@@ -1501,7 +1501,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
     }
 
     # Does the dataset have a header already? If so then we'll have to skip it
-    requires_header <- dbSendQuery(dataset_metadata_conn, 'SELECT * FROM datasets WHERE dataset_id = $chosen_dataset;')
+    requires_header <- dbSendQuery(standardization_rules_metadata_conn, 'SELECT * FROM datasets WHERE dataset_id = $chosen_dataset;')
     dbBind(requires_header, list(chosen_dataset=dataset_id))
     output_header <- dbFetch(requires_header)
     dataset_requires_header <- output_header$has_header
@@ -1518,7 +1518,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
     file_type_query <- paste("SELECT file_extension_code FROM datasets",
                              "INNER JOIN file_formats ON file_formats.file_format_id = datasets.file_format_id",
                              "WHERE dataset_id = ?;")
-    file_type <- dbSendQuery(dataset_metadata_conn, file_type_query)
+    file_type <- dbSendQuery(standardization_rules_metadata_conn, file_type_query)
     dbBind(file_type, list(dataset_id))
     output_file_type <- dbFetch(file_type)
     my_file_type <- output_file_type$file_extension_code
@@ -1551,7 +1551,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       standardizing_name_query <- paste("SELECT distinct standardizing_module_name FROM source_fields sf",
                                         "INNER JOIN standardizing_modules sm ON sm.standardizing_module_id = sf.standardizing_module_id",
                                         "WHERE sf.standardizing_module_id = ? and dataset_id = ?;")
-      standardizing_name <- dbSendQuery(dataset_metadata_conn, standardizing_name_query)
+      standardizing_name <- dbSendQuery(standardization_rules_metadata_conn, standardizing_name_query)
       dbBind(standardizing_name, list(name, dataset_id))
       output_standardizing_name <- dbFetch(standardizing_name)
       my_standardized_name <- output_standardizing_name$standardizing_module
@@ -1568,7 +1568,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
                     "INNER JOIN standardizing_modules sm ON sf.standardizing_module_id = sm.standardizing_module_id",
                     "INNER JOIN destination_fields df ON df.destination_field_id = sm.destination_field_id",
                     "WHERE dataset_id = ", dataset_id)
-    dataset_standardized_names_vals <- dbSendQuery(dataset_metadata_conn, query1)
+    dataset_standardized_names_vals <- dbSendQuery(standardization_rules_metadata_conn, query1)
     standardized_names_vals <- dbFetch(dataset_standardized_names_vals)
     dbClearResult(dataset_standardized_names_vals)
 
@@ -1577,7 +1577,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
                     "FROM source_fields sf",
                     "JOIN standardizing_modules sm ON sf.standardizing_module_id = sm.standardizing_module_id",
                     "WHERE dataset_id = ", dataset_id)
-    module_names <- dbSendQuery(dataset_metadata_conn, query2)
+    module_names <- dbSendQuery(standardization_rules_metadata_conn, query2)
     output_module_names <- dbFetch(module_names)
     dbClearResult(module_names)
 
@@ -1679,7 +1679,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           chunk[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(chunk) - 1)
 
           # Clean the data frame using our pre_process_data() function
-          clean_dataframe <- pre_process_data(chunk, split_data, dataset_metadata_conn, dataset_id,
+          clean_dataframe <- pre_process_data(chunk, split_data, standardization_rules_metadata_conn, dataset_id,
                                               standardized_name_lookup, standardized_function_lookup, flag_lookup_table)
           # Replace NA values with ""
           clean_dataframe[is.na(clean_dataframe)] <- ""
@@ -1694,7 +1694,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
           if(output_health_and_program_data_value == "yes"){
             # Call function in "flag_standardizing_script.R" to return a dataset containing the health/program data
-            df <- compile_health_and_program_data(chunk_read, dataset_metadata_conn, dataset_id)
+            df <- compile_health_and_program_data(chunk_read, standardization_rules_metadata_conn, dataset_id)
             df[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(clean_dataframe) - 1)
             dbWriteTable(clean_db_conn2, "clean_data_table", df, append = TRUE)
           }
@@ -1728,7 +1728,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       error = function(e){
         errmsg <- geterrmessage()
         if(grepl("skip=", errmsg, fixed = TRUE) == FALSE)
-          error_handle(dataset_metadata_conn, errmsg, clean_db_conn, file_path, output_folder)
+          error_handle(standardization_rules_metadata_conn, errmsg, clean_db_conn, file_path, output_folder)
         else
           print(errmsg)
       })
@@ -1817,7 +1817,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           chunk[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(chunk) - 1)
 
           # Clean the data frame using our pre_process_data() function
-          clean_dataframe <- pre_process_data(chunk, split_data, dataset_metadata_conn, dataset_id,
+          clean_dataframe <- pre_process_data(chunk, split_data, standardization_rules_metadata_conn, dataset_id,
                                               standardized_name_lookup, standardized_function_lookup, flag_lookup_table)
 
           # Replace NA values with ""
@@ -1834,7 +1834,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
           if(output_health_and_program_data_value == "yes"){
             # Call function in "flag_standardizing_script.R" to return a dataset containing the health/program data
-            df <- compile_health_and_program_data(chunk_read, dataset_metadata_conn, dataset_id)
+            df <- compile_health_and_program_data(chunk_read, standardization_rules_metadata_conn, dataset_id)
             df[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(clean_dataframe) - 1)
             dbWriteTable(clean_db_conn2, "clean_data_table", df, append = TRUE)
           }
@@ -1870,7 +1870,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       error = function(e){
         errmsg <- geterrmessage()
         if(grepl("skip=", errmsg, fixed = TRUE) == FALSE)
-          error_handle(dataset_metadata_conn, errmsg, clean_db_conn, file_path, output_folder)
+          error_handle(standardization_rules_metadata_conn, errmsg, clean_db_conn, file_path, output_folder)
         else
           print(errmsg)
       })
@@ -1957,7 +1957,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           chunk[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(chunk) - 1)
 
           # Clean the data frame using our pre_process_data() function
-          clean_dataframe <- pre_process_data(chunk, split_data, dataset_metadata_conn, dataset_id,
+          clean_dataframe <- pre_process_data(chunk, split_data, standardization_rules_metadata_conn, dataset_id,
                                               standardized_name_lookup, standardized_function_lookup, flag_lookup_table)
 
           # Replace NA values with ""
@@ -1973,7 +1973,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
           if(output_health_and_program_data_value == "yes"){
             # Call function in "flag_standardizing_script.R" to return a dataset containing the health/program data
-            df <- compile_health_and_program_data(chunk_read, dataset_metadata_conn, dataset_id)
+            df <- compile_health_and_program_data(chunk_read, standardization_rules_metadata_conn, dataset_id)
             df[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(clean_dataframe) - 1)
             dbWriteTable(clean_db_conn2, "clean_data_table", df, append = TRUE)
           }
@@ -2009,7 +2009,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       error = function(e){
         errmsg <- geterrmessage()
         if(grepl("skip=", errmsg, fixed = TRUE) == FALSE)
-          error_handle(dataset_metadata_conn, errmsg, clean_db_conn, file_path, output_folder)
+          error_handle(standardization_rules_metadata_conn, errmsg, clean_db_conn, file_path, output_folder)
         else
           print(errmsg)
       })
@@ -2101,7 +2101,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           result_df[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(result_df) - 1)
 
           # Clean the data frame using our pre_process_data() function
-          clean_dataframe <- pre_process_data(result_df, split_data, dataset_metadata_conn, dataset_id,
+          clean_dataframe <- pre_process_data(result_df, split_data, standardization_rules_metadata_conn, dataset_id,
                                               standardized_name_lookup, standardized_function_lookup, flag_lookup_table)
           # Replace NA values with ""
           clean_dataframe[is.na(clean_dataframe)] <- ""
@@ -2117,7 +2117,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
           if(output_health_and_program_data_value == "yes"){
             # Call function in "flag_standardizing_script.R" to return a dataset containing the health/program data
-            df <- compile_health_and_program_data(result_df, dataset_metadata_conn, dataset_id)
+            df <- compile_health_and_program_data(result_df, standardization_rules_metadata_conn, dataset_id)
             df[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(clean_dataframe) - 1)
             dbWriteTable(clean_db_conn2, "clean_data_table", df, append = TRUE)
           }
@@ -2156,7 +2156,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
         print(e)
         errmsg <- geterrmessage()
         if(grepl("skip=", errmsg, fixed = TRUE) == FALSE)
-          error_handle(dataset_metadata_conn, errmsg, clean_db_conn, file_path, output_folder)
+          error_handle(standardization_rules_metadata_conn, errmsg, clean_db_conn, file_path, output_folder)
         else
           print(errmsg)
       })
@@ -2240,12 +2240,12 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
   # Error handling to ensure the provided SQLite file is actually an SQLite file
   #----#
-  if(is.null(metadata_file) || file_ext(metadata_file) != "sqlite"){
+  if(is.null(standardization_rules_metadata) || file_ext(standardization_rules_metadata) != "sqlite"){
     error_handle(NULL, "ERROR: Invalid metadata file provided.", NULL, input_file_path, output_folder)
   }
   #----#
 
-  metadata_connection <- dbConnect(RSQLite::SQLite(), metadata_file)
+  standardization_rules_connection <- dbConnect(RSQLite::SQLite(), standardization_rules_metadata)
 
   # Error handling to ensure that the metadata has all the correct tables
   #----#
@@ -2259,19 +2259,19 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
   )
 
   # Check if all required tables exist and match exactly
-  existing_tables <- dbListTables(metadata_connection)
+  existing_tables <- dbListTables(standardization_rules_connection)
   missing_tables <- setdiff(required_tables, existing_tables)
 
   # Do the error check here, if missing_tables is empty, we're good, otherwise throw an error
   if(length(missing_tables) != 0){
-    error_handle(metadata_connection, "ERROR: Invalid metadata tables.", NULL, input_file_path, output_folder)
+    error_handle(standardization_rules_connection, "ERROR: Invalid metadata tables.", NULL, input_file_path, output_folder)
   }
 
   rm(required_tables, missing_tables, existing_tables)
   #----#
 
   # Get the dataset_id from the file name
-  chosen_fields <- dbSendQuery(metadata_connection, 'SELECT dataset_id FROM datasets WHERE dataset_code = ? AND enabled_for_standardization = 1;')
+  chosen_fields <- dbSendQuery(standardization_rules_connection, 'SELECT dataset_id FROM datasets WHERE dataset_code = ? AND enabled_for_standardization = 1;')
   dbBind(chosen_fields, list(input_dataset_code))
   output_id <- dbFetch(chosen_fields)
   dbClearResult(chosen_fields)
@@ -2279,19 +2279,19 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
   # Error handling, if there is more than one enabled data set (somehow) or none enabled with the same data set code, throw an error
   #----#
   if(nrow(output_id) == 0){
-    error_handle(metadata_connection, "ERROR: No enabled datasets match the desired code, verify that the dataset to be standardized is enabled and try again.", NULL, input_file_path, output_folder)
+    error_handle(standardization_rules_connection, "ERROR: No enabled datasets match the desired code, verify that the dataset to be standardized is enabled and try again.", NULL, input_file_path, output_folder)
   }
   else if(nrow(output_id) > 1){
-    error_handle(metadata_connection, "ERROR: More than one of the enabled datasets match the dataset code, disable all but one and try again.", NULL, input_file_path, output_folder)
+    error_handle(standardization_rules_connection, "ERROR: More than one of the enabled datasets match the dataset code, disable all but one and try again.", NULL, input_file_path, output_folder)
   }
 
   if(is.null(input_file_path)){
-    error_handle(metadata_connection, "ERROR: File path to unclean dataset not provided, provide a path in the input flags via file_path.", NULL, input_file_path, output_folder)
+    error_handle(standardization_rules_connection, "ERROR: File path to unclean dataset not provided, provide a path in the input flags via file_path.", NULL, input_file_path, output_folder)
   }
 
   chunk_size <- as.integer(flag_lookup["chunk_size"])
   if(is.na(chunk_size) || (chunk_size != 100000 && chunk_size != 200000 && chunk_size != 500000 && chunk_size != 1000000)){
-    error_handle(metadata_connection, "ERROR: Invalid chunking size.", NULL, input_file_path, output_folder)
+    error_handle(standardization_rules_connection, "ERROR: Invalid chunking size.", NULL, input_file_path, output_folder)
   }
   #----#
 
@@ -2303,14 +2303,14 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
   }
 
   # Set a busy_timeout time of 10 seconds incase of multiple users
-  dbExecute(metadata_connection, "PRAGMA busy_timeout = 10000")
+  dbExecute(standardization_rules_connection, "PRAGMA busy_timeout = 10000")
 
   # Automatically pre-process the chunk from the dropped input file
-  clean_file_path <- pre_process_chunks(input_file_path, metadata_connection, dataset_id, flag_lookup, output_folder, input_dataset_code)
+  clean_file_path <- pre_process_chunks(input_file_path, standardization_rules_connection, dataset_id, flag_lookup, output_folder, input_dataset_code)
 
   # Disconnect once finished
-  dbDisconnect(metadata_connection)
-  rm(metadata_connection)
+  dbDisconnect(standardization_rules_connection)
+  rm(standardization_rules_connection)
   rm(dataset_id)
 
   # Open the metadata connection, and return a data frame if the file size is low enough
