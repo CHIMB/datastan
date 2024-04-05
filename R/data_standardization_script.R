@@ -33,7 +33,6 @@ error_handle <- function(metadata_conn, err_msg, cleaned_file, error_file_path, 
   stop(err_msg)
 }
 
-
 #' Pre Process Data
 #'
 #' The pre_process_data() function will take in a source data frame object, and
