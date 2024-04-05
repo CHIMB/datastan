@@ -5632,6 +5632,9 @@ startMetadataUI <- function(metadata_file_path){
   rm(required_tables, missing_tables, existing_tables)
   #----#
 
+  # Set a busy timeout here to help when more than one user is writing or reading
+  dbExecute(metadata_connection, "PRAGMA busy_timeout = 10000")
+
   # Start App ----
   shinyApp(ui = dataset_ui,
            server = function(input, output, session) {
