@@ -2213,6 +2213,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
                   "file_output",
                   "output_health_and_program_data",
                   "chunk_size",
+                  "max_file_size_output",
                   "debug_mode"),
     flag_value = c("original", "no", "no", "no", "no", "no", "no",
                    "no", "none", "null",
@@ -2220,6 +2221,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
                    "sqlite",
                    "no",
                    100000,
+                   "null",
                    "off")
   )
 
@@ -2315,14 +2317,16 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
   # Open the metadata connection, and return a data frame if the file size is low enough
   file_size <- file.size(clean_file_path)/1000000
+  max_file_size <- flag_lookup["max_file_size_output"]
   # If its less than 1GB then return a data frame, other wise return nothing.
-  if(file_size <= 1000){
+  if(max_file_size != "null" && !is.na(suppressWarnings(as.integer(max_file_size))) && file_size <= as.integer(max_file_size)){
     clean_db_conn <- dbConnect(RSQLite::SQLite(), clean_file_path)
     df <- dbReadTable(clean_db_conn, 'clean_data_table')
     dbDisconnect(clean_db_conn)
     return(df)
   }
   else{
+    print("File is too large to open and return or a maximum file size was not supplied.")
     return(data.frame())
   }
 
