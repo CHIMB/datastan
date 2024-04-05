@@ -830,8 +830,8 @@ dataset_ui <- fluidPage(
           fluidRow(
             column(width = 6, div(dataTableOutput("add_compound_field_formats"), style = "font-size: 0.7vw; width: 48vw",
                                   fluidRow(
-                                    column(6, actionButton("see_separator_example", "Separator Example", class = "btn-success btn-lg"), align = "right"),
-                                    column(6, actionButton("see_index_example", "Index Example", class = "btn-success btn-lg"), align = "left")
+                                    #column(6, actionButton("see_separator_example", "Separator Example", class = "btn-success btn-lg"), align = "right"),
+                                    #column(6, actionButton("see_index_example", "Index Example", class = "btn-success btn-lg"), align = "left")
                                   )
             )),
             column(width = 6, fluidPage(
@@ -1317,8 +1317,8 @@ dataset_ui <- fluidPage(
             hr(),
             column(width = 6, div(dataTableOutput("updatable_compound_formats"), style = "font-size: 0.7vw; width: 48vw",
                                   fluidRow(
-                                    column(6, actionButton("see_separator_example_2", "Separator Example", class = "btn-success btn-lg"), align = "right"),
-                                    column(6, actionButton("see_index_example_2", "Index Example", class = "btn-success btn-lg"), align = "left")
+                                    #column(6, actionButton("see_separator_example_2", "Separator Example", class = "btn-success btn-lg"), align = "right"),
+                                    #column(6, actionButton("see_index_example_2", "Index Example", class = "btn-success btn-lg"), align = "left")
                                   )
 
             )),
@@ -5030,6 +5030,7 @@ dataset_server <- function(input, output, session, metadata_connection){
     ))
   })
   #----
+
 
   #-- Update Categorical Fields --#
   #----
