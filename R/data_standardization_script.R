@@ -2290,8 +2290,8 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
   }
 
   chunk_size <- as.integer(flag_lookup["chunk_size"])
-  if(is.na(chunk_size) || (chunk_size != 100000 && chunk_size != 200000 && chunk_size != 500000 && chunk_size != 1000000)){
-    error_handle(standardization_rules_connection, "ERROR: Invalid chunking size.", NULL, input_file_path, output_folder)
+  if(is.na(chunk_size) || (chunk_size < 10000 || chunk_size > 1000000)){
+    error_handle(standardization_rules_connection, "ERROR: Invalid chunking size. Must be >= 10k and <= 1M", NULL, input_file_path, output_folder)
   }
   #----#
 

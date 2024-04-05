@@ -396,12 +396,13 @@ data_standardization_ui <- fluidPage(
     column(12, div(
       style = "border: 5px solid #ccc; padding: 10px; width: 1000px; background-color: #Bbbbbb; font-size: 16px",
       div(style = "display: flex; justify-content: center; align-items: center;",
-          selectInput("chunking_size", label = "What size chunks should the file be read in?",
-                      choices = list("100,000 Rows" = 100000,
-                                     "200,000 Rows" = 200000,
-                                     "500,000 Rows" = 500000,
-                                     "1,000,000 Rows" = 1000000),
-                      selected = 100000, width = validateCssUnit(600)),
+          # selectInput("chunking_size", label = "What size chunks should the file be read in?",
+          #             choices = list("100,000 Rows" = 100000,
+          #                            "200,000 Rows" = 200000,
+          #                            "500,000 Rows" = 500000,
+          #                            "1,000,000 Rows" = 1000000),
+          #             selected = 100000, width = validateCssUnit(600)),
+          numericInput("chunking_size", label = "How many rows should be read at a time?", value = NULL, width = validateCssUnit(600)),
           bsButton("chunking_size_help", label = "", icon = icon("question"), style = "info"),
           bsPopover(id = "chunking_size_help", title = "Chunk Size - Help",
                     content = paste("The chunking size is used to determine how many rows to read in at a time when processing data, you may select",
@@ -607,6 +608,12 @@ data_standardization_server <- function(input, output, session){
 
     if(is.null(chosen_metadata) || file_ext(chosen_metadata) != "sqlite"){
       showNotification("Failed to Standardize Dataset - Invalid SQLite File", type = "error", closeButton = FALSE)
+      enable("standardize_data")
+      return()
+    }
+
+    if(is.na(chunking_size) || is.null(chunking_size) || (chunking_size < 10000 || chunking_size > 1000000)){
+      showNotification("Failed to Standardize Dataset - Invalid chunking size. Must be >= 10k and <= 1M", type = "error", closeButton = FALSE)
       enable("standardize_data")
       return()
     }
