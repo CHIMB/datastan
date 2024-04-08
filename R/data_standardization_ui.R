@@ -660,6 +660,7 @@ data_standardization_server <- function(input, output, session){
       showNotification(paste("Failed to Standardize Data -", geterrmessage()), type = "error", closeButton = FALSE)
     })
 
+    gc() # Call garbage collector after we finish processing
     Sys.sleep(5)
     enable("standardize_data")
 

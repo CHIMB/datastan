@@ -19,7 +19,9 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-`datastan` provides an easy and user friendly way for data analysts to process data files and manage the standardization rules responsible for processing the source fields of a dataset. This package provides both programmatic and graphical ways to manage and standardize source files:
+`datastan` provides an easy and user friendly way for data analysts to process data files and manage the standardization rules responsible for processing the source fields of a dataset. This package provides both programmatic and graphical ways to manage and standardize source files.
+
+This package would be most beneficial in the field of data science, specifically data-linkage and data analysis as the `datastan` package would help minimize the time spent on writing standardization rules for each dataset by using the standardization rules of the package to normalize disparate source files to a common format to ready it for record-linkage and analysis.
 
 # Installation
 

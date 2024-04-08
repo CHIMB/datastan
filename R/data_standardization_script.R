@@ -1778,11 +1778,11 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           # Skip the header if it's not the first iteration
           if (rows_read == 0 && dataset_requires_header == 1) {
             header_columns <- as.character(fread(input = file_path, header = FALSE, nrow = 1, fill = TRUE))
-            chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, colClasses = "character", skip = rows_read + 1)
+            chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read + 1, )
             rows_read <- 1
           }
           else{
-            chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, colClasses = "character", skip = rows_read)
+            chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read)
           }
 
           # Call garbage collector
@@ -2314,6 +2314,9 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
   dbDisconnect(standardization_rules_connection)
   rm(standardization_rules_connection)
   rm(dataset_id)
+
+  # Call garbage collection
+  gc()
 
   # Open the metadata connection, and return a data frame if the file size is low enough
   file_size <- file.size(clean_file_path)/1000000
