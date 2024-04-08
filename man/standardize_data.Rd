@@ -9,7 +9,7 @@ standardize_data(
   input_dataset_code,
   input_flags,
   output_folder,
-  metadata_file
+  standardization_rules_metadata
 )
 }
 \arguments{
@@ -21,7 +21,7 @@ standardize_data(
 
 \item{output_folder}{An output folder that the successfully cleaned data ready for linkage will be placed in once pre-processing is complete.}
 
-\item{metadata_file}{A path to a metadata file.}
+\item{standardization_rules_metadata}{A path to a standardization rules metadata file.}
 }
 \value{
 A cleaned data frame containing the cleaned table from pre_process_chunks() returned database (as long as file size is <1GB)

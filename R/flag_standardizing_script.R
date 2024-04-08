@@ -457,3 +457,152 @@ compile_health_and_program_data <- function(source_data_frame, db_conn, dataset_
   rm(standardized_field_orders)
   return(processed_data_frame)
 }
+
+#' Create Standardizing Options Lookup
+#'
+#' Using this function the user can supply any number of flag options they want (not all are required, missing entries will be given a default
+#' value) which will be used as additional standardization rules.
+#' @param convert_name_case Convert the capitalization of a person's name. (Options: "upper", "lower", "default")
+#' @param convert_name_to_ascii Remove diacritics of a person's name. (Options: "yes", "no")
+#' @param remove_name_punctuation Remove any symbols or punctuation from a person's name. (Options: "yes", "no")
+#' @param compress_name_whitespace Replace name white space with an empty string symbol. (Options: "yes", "no")
+#' @param list_all_curr_given_names Combine all given names of a person into an additional column. (Options: "yes", "no")
+#' @param list_all_curr_surnames Combine all surnames of a person into an additional column. (Options: "yes", "no")
+#' @param list_all_curr_names Combine all names of a person into an additional column. (Options: "yes", "no")
+#' @param impute_sex Impute missing values in sex fields. (Options: "yes", "no")
+#' @param impute_sex_type How should the sex imputation take place? (Options: "custom" - Must be a .csv file with two columns [primary_given_name] & [sex], "internal" - Use sex values from the source data set)
+#' @param chosen_sex_file If the custom type is chosen, supply an input file.
+#' @param compress_address_whitespace Replace location based fields white space with an empty string symbol. (Options: "yes", "no")
+#' @param remove_address_punctuation Remove any symbols or punctuation from location based fields. (Options: "yes", "no")
+#' @param convert_address_case Convert the capitalization of a location based field. (Options: "upper", "lower", "default")
+#' @param convert_address_to_ascii Remove diacritics of a location based field. (Options: "yes", "no")
+#' @param extract_postal_code Attempt to extract postal codes from location based fields and place an additional column. (Options: "yes", "no")
+#' @param file_output What file output format is desired. (Options: "csv", "rds", "sqlite")
+#' @param output_health_and_program_data Output non-linkage fields in a separate file? (Options: "yes", "no")
+#' @param chunk_size How many rows should be read at a time when reading the source file in chunks? (Options: 10000-1000000)
+#' @param debug_mode Print additional information to the console in case of potential bugs? (Options: "on", "off")
+#' @param max_file_size_output What is the max file size that a data frame can be before it isn't returned? (Options: integer in Mega-bytes)
+#' @return A lookup table consisting of chosen flags and the assigned default options for bad inputs or undefined choices.
+#' @examples
+#' flags <- create_standardizing_options_lookup(convert_name_case = "upper", impute_sex = "yes", chunk_size = 15000, max_file_size_output = 200)
+#' @export
+create_standardizing_options_lookup <- function(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace,
+                                                list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names,
+                                                impute_sex, impute_sex_type, chosen_sex_file,
+                                                compress_address_whitespace, remove_address_punctuation, convert_address_case, convert_address_to_ascii, extract_postal_code,
+                                                file_output, output_health_and_program_data, chunk_size, debug_mode, max_file_size_output){
+
+  # NAMES
+  #----------------------------------------------------------------------------#
+  # Convert Name Case
+  if(missing(convert_name_case) || (convert_name_case != "upper" && convert_name_case != "lower"))
+    convert_name_case <- "default"
+
+  # Convert Name to ASCII
+  if(missing(convert_name_to_ascii) || (convert_name_to_ascii != "yes" && convert_name_to_ascii != "no"))
+    convert_name_to_ascii <- "no"
+
+  # Remove Name Punctuation
+  if(missing(remove_name_punctuation) || (remove_name_punctuation != "yes" && remove_name_punctuation != "no"))
+    remove_name_punctuation <- "no"
+
+  # Compress Name White space
+  if(missing(compress_name_whitespace) || (compress_name_whitespace != "yes" && compress_name_whitespace != "no"))
+    compress_name_whitespace <- "no"
+
+  # List Given Names
+  if(missing(list_all_curr_given_names) || (list_all_curr_given_names != "upper" && list_all_curr_given_names != "lower"))
+    list_all_curr_given_names <- "default"
+
+  # List Surnames
+  if(missing(list_all_curr_surnames) || (list_all_curr_surnames != "upper" && list_all_curr_surnames != "lower"))
+    list_all_curr_surnames <- "default"
+
+  # List All Names
+  if(missing(list_all_curr_names) || (list_all_curr_names != "upper" && list_all_curr_names != "lower"))
+    list_all_curr_names <- "default"
+  #----------------------------------------------------------------------------#
+
+  # SEX
+  #----------------------------------------------------------------------------#
+  # Impute Sex
+  if(missing(impute_sex) || (impute_sex != "yes" && impute_sex != "no"))
+    impute_sex <- "no"
+
+  # Impute Sex Type
+  if(missing(impute_sex_type) || (impute_sex_type != "custom" && impute_sex_type != "internal"))
+    impute_sex_type <- "internal"
+
+  # Chosen Sex Imputation File
+  if(missing(chosen_sex_file) || (!file.exists(chosen_sex_file)))
+    chosen_sex_file <- "none"
+  #----------------------------------------------------------------------------#
+
+  # LOCATIONS
+  #----------------------------------------------------------------------------#
+  # Compress Location Based Fields White space
+  if(missing(compress_address_whitespace) || (compress_address_whitespace != "yes" && compress_address_whitespace != "no"))
+    compress_address_whitespace <- "no"
+
+  # Remove Location Based Fields Punctuation
+  if(missing(remove_address_punctuation) || (remove_address_punctuation != "yes" && remove_address_punctuation != "no"))
+    remove_address_punctuation <- "no"
+
+  # Convert Location Based Fields Case
+  if(missing(convert_address_case) || (convert_address_case != "upper" && convert_address_case != "lower"))
+    convert_address_case <- "default"
+
+  # Convert Location Based Fields to ASCII
+  if(missing(convert_address_to_ascii) || (convert_address_to_ascii != "yes" && convert_address_to_ascii != "no"))
+    convert_address_to_ascii <- "no"
+
+  # Convert Location Based Fields to ASCII
+  if(missing(extract_postal_code) || (extract_postal_code != "yes" && extract_postal_code != "no"))
+    extract_postal_code <- "no"
+  #----------------------------------------------------------------------------#
+
+  # OUTPUT
+  #----------------------------------------------------------------------------#
+  # Convert Location Based Fields to ASCII
+  if(missing(file_output) || (file_output != "csv" && file_output != "rds"))
+    file_output <- "sqlite"
+
+  # Convert Location Based Fields to ASCII
+  if(missing(output_health_and_program_data) || (output_health_and_program_data != "yes" && output_health_and_program_data != "no"))
+    output_health_and_program_data <- "no"
+
+  # Convert Location Based Fields to ASCII
+  if(missing(chunk_size) || (chunk_size < 10000 || chunk_size > 1000000))
+    chunk_size <- 100000
+
+  # Convert Location Based Fields to ASCII
+  if(missing(debug_mode) || (debug_mode != "yes" && debug_mode != "no"))
+    debug_mode <- "no"
+
+  # Convert Location Based Fields to ASCII
+  if(missing(max_file_size_output) || (max_file_size_output <= 0))
+    max_file_size_output <- "null"
+  #----------------------------------------------------------------------------#
+
+  # Construct the flag lookup tables for standardization [Set this to be in a single source file]
+  flag_values <- data.frame(
+    flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names",
+                  "impute_sex", "impute_sex_type", "chosen_sex_file",
+                  "compress_address_whitespace", "remove_address_punctuation", "convert_address_case", "convert_address_to_ascii", "extract_postal_code",
+                  "file_output",
+                  "output_health_and_program_data",
+                  "chunk_size",
+                  "max_file_size_output",
+                  "debug_mode"),
+    flag_value = c(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace, list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names,
+                   impute_sex, impute_sex_type, chosen_sex_file,
+                   compress_address_whitespace, remove_address_punctuation, convert_address_case, convert_address_to_ascii, extract_postal_code,
+                   file_output, output_health_and_program_data, chunk_size, max_file_size_output, debug_mode)
+  )
+
+  # Create the lookup table
+  flag_lookup <- setNames(flag_values$flag_value, flag_values$flag_code)
+
+  # Return the lookup table
+  return(flag_lookup)
+}

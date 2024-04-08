@@ -5,20 +5,20 @@
 \title{Standardize File Output}
 \usage{
 standardize_file_output(
-  db_conn,
+  clean_df,
   output_folder_path,
   flag_lookup_table,
   input_dataset_code
 )
 }
 \arguments{
-\item{db_conn}{A connection to the metadata database, used to read the cleaned table after processing has finished.}
-
 \item{output_folder_path}{The output_folder_path will be used to determine where the standardized file be placed.}
 
 \item{flag_lookup_table}{Lookup table used to determine what output file format is to be used. Output format can be of type rdata, csv, xlsx or just sqlite.}
 
 \item{input_dataset_code}{Used as prefix for the cleaned file to help differentiate amongst other cleaned files.}
+
+\item{db_conn}{A connection to the metadata database, used to read the cleaned table after processing has finished.}
 }
 \description{
 Takes in a connection to the database, the output path folder, and the flag lookup table. Uses the value from

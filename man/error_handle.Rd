@@ -5,7 +5,7 @@
 \title{Error Handle}
 \usage{
 error_handle(
-  metadata_conn,
+  standardization_rules_metadata,
   err_msg,
   cleaned_file,
   error_file_path,
@@ -13,7 +13,7 @@ error_handle(
 )
 }
 \arguments{
-\item{metadata_conn}{A database connection that is used in addition to the dataset_id, passed from the standardize_data() function. Is also used in the pre_process_data(), and pre_process_chunks() functions.}
+\item{standardization_rules_metadata}{A database connection that is used in addition to the dataset_id, passed from the standardize_data() function. Is also used in the pre_process_data(), and pre_process_chunks() functions.}
 
 \item{err_msg}{An error message indicated what went wrong in the program, this message will be written to an output .txt file and placed in a folder containing error messages}
 

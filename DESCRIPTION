@@ -1,7 +1,7 @@
 Package: datastan
 Type: Package
 Title: Minimizing Linkage Response Time with User Friendly Standardizing Functions and Applications
-Version: 0.3.0
+Version: 0.3.1
 Author: Cole Chuchmach [aut, cre]
 Maintainer: Cole Chuchmach <Cole.Chuchmach@umanitoba.ca>
 Description: The automatic data standardization package is meant to help minimize the time data analysts spend
