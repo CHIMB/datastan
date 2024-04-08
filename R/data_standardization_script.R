@@ -1684,11 +1684,14 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           # Replace NA values with ""
           clean_dataframe[is.na(clean_dataframe)] <- ""
 
-          # # Add record_primary_key column
-          # clean_dataframe[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(clean_dataframe) - 1)
-
           # Append the clean_dataframe to the SQLite database
           dbWriteTable(clean_db_conn, "clean_data_table", clean_dataframe, append = TRUE)
+
+          # Standardize the output format
+          standardize_file_output(clean_dataframe, output_folder, flag_lookup_table, dataset_code)
+
+          # Garbage collect
+          gc()
 
           # If we are outputting the program and health data, run another function to grab all the data we didn't need to standardize
           output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
@@ -1697,7 +1700,13 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             df <- compile_health_and_program_data(chunk_read, standardization_rules_metadata_conn, dataset_id)
             df[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(clean_dataframe) - 1)
             dbWriteTable(clean_db_conn2, "clean_data_table", df, append = TRUE)
+
+            # Standardize the output format
+            standardize_file_output(df, output_folder, flag_lookup_table, paste0(dataset_code, "_non_linkage"))
           }
+
+          # Garbage collect
+          gc()
 
           # Increment the record primary key counter
           record_primary_key <- record_primary_key + nrow(clean_dataframe)
@@ -1743,13 +1752,13 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
         dbWriteTable(clean_db_conn, "clean_data_table", final_df, overwrite = TRUE)
       }
 
-      # Determine whether the user wants the file output in a different format
-      standardize_file_output(clean_db_conn, output_folder, flag_lookup_table, dataset_code)
-
-      # Determine whether the user wants the non-linkage data in a different format
-      if(flag_lookup_table["output_health_and_program_data"] == "yes"){
-        standardize_file_output(clean_db_conn2, output_folder, flag_lookup_table, paste0(dataset_code, "_non_linkage"))
-      }
+      # # Determine whether the user wants the file output in a different format
+      # standardize_file_output(clean_db_conn, output_folder, flag_lookup_table, dataset_code)
+      #
+      # # Determine whether the user wants the non-linkage data in a different format
+      # if(flag_lookup_table["output_health_and_program_data"] == "yes"){
+      #   standardize_file_output(clean_db_conn2, output_folder, flag_lookup_table, paste0(dataset_code, "_non_linkage"))
+      # }
 
       # Disconnect from the database
       dbDisconnect(clean_db_conn)
@@ -1823,21 +1832,29 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           # Replace NA values with ""
           clean_dataframe[is.na(clean_dataframe)] <- ""
 
-          # # Add record_primary_key column
-          # clean_dataframe[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(clean_dataframe) - 1)
-
           # Append the clean_dataframe to the SQLite database
           dbWriteTable(clean_db_conn, "clean_data_table", clean_dataframe, append = TRUE)
 
-          # If we are outputting the program and health data, run another function
-          # to grab all the data we didn't need to standardize
+          # Standardize the output format
+          standardize_file_output(clean_dataframe, output_folder, flag_lookup_table, dataset_code)
+
+          # Garbage collect
+          gc()
+
+          # If we are outputting the program and health data, run another function to grab all the data we didn't need to standardize
           output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
           if(output_health_and_program_data_value == "yes"){
             # Call function in "flag_standardizing_script.R" to return a dataset containing the health/program data
             df <- compile_health_and_program_data(chunk_read, standardization_rules_metadata_conn, dataset_id)
             df[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(clean_dataframe) - 1)
             dbWriteTable(clean_db_conn2, "clean_data_table", df, append = TRUE)
+
+            # Standardize the output format
+            standardize_file_output(df, output_folder, flag_lookup_table, paste0(dataset_code, "_non_linkage"))
           }
+
+          # Garbage collect
+          gc()
 
           # Increment the record primary key counter
           record_primary_key <- record_primary_key + nrow(clean_dataframe)
@@ -1884,14 +1901,6 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
         source_df <- dbReadTable(clean_db_conn, 'clean_data_table')
         final_df  <- impute_sex(source_df, source_df$primary_given_name, source_df$gender, flag_lookup_table)
         dbWriteTable(clean_db_conn, "clean_data_table", final_df, overwrite = TRUE)
-      }
-
-      # Determine whether the user wants the file output in a different format
-      standardize_file_output(clean_db_conn, output_folder, flag_lookup_table, dataset_code)
-
-      # Determine whether the user wants the non-linkage data in a different format
-      if(flag_lookup_table["output_health_and_program_data"] == "yes"){
-        standardize_file_output(clean_db_conn2, output_folder, flag_lookup_table, paste0(dataset_code, "_non_linkage"))
       }
 
       # Disconnect from the database connection
@@ -1963,11 +1972,14 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           # Replace NA values with ""
           clean_dataframe[is.na(clean_dataframe)] <- ""
 
-          # # Add record_primary_key column
-          # clean_dataframe[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(clean_dataframe) - 1)
-
           # Append the clean_dataframe to the SQLite database
           dbWriteTable(clean_db_conn, "clean_data_table", clean_dataframe, append = TRUE)
+
+          # Standardize the output format
+          standardize_file_output(clean_dataframe, output_folder, flag_lookup_table, dataset_code)
+
+          # Garbage collect
+          gc()
 
           # If we are outputting the program and health data, run another function to grab all the data we didn't need to standardize
           output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
@@ -1976,7 +1988,13 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             df <- compile_health_and_program_data(chunk_read, standardization_rules_metadata_conn, dataset_id)
             df[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(clean_dataframe) - 1)
             dbWriteTable(clean_db_conn2, "clean_data_table", df, append = TRUE)
+
+            # Standardize the output format
+            standardize_file_output(df, output_folder, flag_lookup_table, paste0(dataset_code, "_non_linkage"))
           }
+
+          # Garbage collect
+          gc()
 
           # Increment the record primary key counter
           record_primary_key <- record_primary_key + nrow(clean_dataframe)
@@ -2022,14 +2040,6 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
         source_df <- dbReadTable(clean_db_conn, 'clean_data_table')
         final_df  <- impute_sex(source_df, source_df$primary_given_name, source_df$gender, flag_lookup_table)
         dbWriteTable(clean_db_conn, "clean_data_table", final_df, overwrite = TRUE)
-      }
-
-      # Determine whether the user wants the file output in a different format
-      standardize_file_output(clean_db_conn, output_folder, flag_lookup_table, dataset_code)
-
-      # Determine whether the user wants the non-linkage data in a different format
-      if(flag_lookup_table["output_health_and_program_data"] == "yes"){
-        standardize_file_output(clean_db_conn2, output_folder, flag_lookup_table, paste0(dataset_code, "_non_linkage"))
       }
 
       # Close the SQLite database connection
@@ -2106,21 +2116,29 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           # Replace NA values with ""
           clean_dataframe[is.na(clean_dataframe)] <- ""
 
-          # # Add record_primary_key column
-          # clean_dataframe[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(clean_dataframe) - 1)
-
           # Append the clean_dataframe to the SQLite database
           dbWriteTable(clean_db_conn, "clean_data_table", clean_dataframe, append = TRUE)
 
-          # If we are outputting the program and health data, run another function
-          # to grab all the data we didn't need to standardize
+          # Standardize the output format
+          standardize_file_output(clean_dataframe, output_folder, flag_lookup_table, dataset_code)
+
+          # Garbage collect
+          gc()
+
+          # If we are outputting the program and health data, run another function to grab all the data we didn't need to standardize
           output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
           if(output_health_and_program_data_value == "yes"){
             # Call function in "flag_standardizing_script.R" to return a dataset containing the health/program data
             df <- compile_health_and_program_data(result_df, standardization_rules_metadata_conn, dataset_id)
             df[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(clean_dataframe) - 1)
             dbWriteTable(clean_db_conn2, "clean_data_table", df, append = TRUE)
+
+            # Standardize the output format
+            standardize_file_output(df, output_folder, flag_lookup_table, paste0(dataset_code, "_non_linkage"))
           }
+
+          # Garbage collect
+          gc()
 
           # Increment the record primary key counter
           record_primary_key <- record_primary_key + nrow(clean_dataframe)
@@ -2170,14 +2188,6 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
         source_df <- dbReadTable(clean_db_conn, 'clean_data_table')
         final_df  <- impute_sex(source_df, source_df$primary_given_name, source_df$gender, flag_lookup_table)
         dbWriteTable(clean_db_conn, "clean_data_table", final_df, overwrite = TRUE)
-      }
-
-      # Determine whether the user wants the file output in a different format
-      standardize_file_output(clean_db_conn, output_folder, flag_lookup_table, dataset_code)
-
-      # Determine whether the user wants the non-linkage data in a different format
-      if(flag_lookup_table["output_health_and_program_data"] == "yes"){
-        standardize_file_output(clean_db_conn2, output_folder, flag_lookup_table, paste0(dataset_code, "_non_linkage"))
       }
 
       # Close the SQLite database connection

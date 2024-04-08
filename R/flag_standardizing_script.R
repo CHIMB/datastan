@@ -318,32 +318,44 @@ impute_sex <- function(source_df, processed_names, processed_genders, flag_looku
 #' @examples
 #' standardize_file_output(db, "path/to/folder", flag_lookup, "fakecode")
 #' @export
-standardize_file_output <- function(db_conn, output_folder_path, flag_lookup_table, input_dataset_code){
-  # Read the table into a data frame
-  clean_dataframe_chunked <- dbReadTable(db_conn, "clean_data_table")
+standardize_file_output <- function(clean_df, output_folder_path, flag_lookup_table, input_dataset_code){
+
+  # # Read the table into a data frame
+  # clean_dataframe_chunked <- dbReadTable(db_conn, "clean_data_table")
 
   output_file_type <- flag_lookup_table["file_output"]
-  if(output_file_type == "rdata"){
-    # Create the full path to the output RData file within the output folder
-    output_file <- file.path(output_folder_path, paste0(input_dataset_code, "_cleaned_dataset.RData"))
+  if(output_file_type == "rds"){
 
-    # Save the Rdata file
-    save(clean_dataframe_chunked, file = output_file)
+    # Create the full path to the output RData file within the output folder
+    output_file <- file.path(output_folder_path, paste0(input_dataset_code, "_cleaned_dataset.Rds"))
+
+    # Load in the old file if it exists, otherwise we will need to save for the first time
+    if(file.exists(output_file)){
+      curr_df <- readRDS(output_file)
+
+      # Bind and save the data
+      saveRDS(rbind(curr_df, clean_df), output_file)
+    }
+    else{
+      # Save the Rdata file
+      saveRDS(clean_df, output_file)
+    }
   }
   else if (output_file_type == "csv"){
     # Create the full path to the output RData file within the output folder
     output_file <- file.path(output_folder_path, paste0(input_dataset_code, "_cleaned_dataset.csv"))
 
     # Save the csv file
-    fwrite(clean_dataframe_chunked, file = output_file)
+    fwrite(clean_df, file = output_file, append = TRUE)
   }
-  else if (output_file_type == "excel"){
-    # Create the full path to the output RData file within the output folder
-    output_file <- file.path(output_folder_path, paste0(input_dataset_code, "_cleaned_dataset.xlsx"))
-
-    # Save the excel file
-    write_xlsx(clean_dataframe_chunked, path = output_file)
-  }
+  # else if (output_file_type == "excel"){
+  #   # Create the full path to the output RData file within the output folder
+  #   output_file <- file.path(output_folder_path, paste0(input_dataset_code, "_cleaned_dataset.xlsx"))
+  #
+  #   # Save the excel file
+  #   write.xlsx(clean_df, output_file, append = TRUE)
+  #   #write_xlsx(clean_df, path = output_file)
+  # }
 }
 
 #' Extract Postal Codes
