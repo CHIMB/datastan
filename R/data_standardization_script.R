@@ -887,8 +887,6 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           curr_source_field_id <- source_field_ids[i]
           unprocessed_provinces <- source_data_frame[[curr_province_field]]
 
-          #print(unprocessed_provinces)
-
           # Create a query to join categorical_fields and categorical_values tables for the current field
           query <- paste("SELECT cf.source_field_id, cf.source_value, cv.standardized_value",
                          "FROM categorical_fields cf",
@@ -901,12 +899,8 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           # Create a lookup table for the current province field
           province_lookup <- setNames(province_vals$standardized_value, tolower(province_vals$source_value))
 
-          #print(province_lookup)
-
           # Vectorized standardization of gender values for the current field
           standardized_provinces <- province_lookup[tolower(unprocessed_provinces)]
-
-          #print(standardized_provinces)
 
           # Replace NA values
           standardized_provinces[is.na(standardized_provinces)] <- ""
@@ -1938,22 +1932,17 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
           # Skip the header if it's not the first iteration
           if (rows_read == 0 && dataset_requires_header == 1) {
-            chunk_read <- read_sas(file_path, n_max = chunk_size, skip = rows_read + 1, encoding = "latin1", .name_repair = "minimal")
+            chunk_read <- read_sas(file_path, n_max = chunk_size, skip = rows_read + 1, encoding = "latin1")
             rows_read <- 1
           }
           else{
-            chunk_read <- read_sas(file_path, n_max = chunk_size, skip = rows_read, encoding = "latin1", .name_repair = "minimal")
+            chunk_read <- read_sas(file_path, n_max = chunk_size, skip = rows_read, encoding = "latin1")
           }
 
-          #print(nrow(chunk_read))
-          #print(length(chunk_read))
-
+          # If no rows were read from the chunk, then break
           if(nrow(chunk_read) == 0){
             break
           }
-
-          # if(length(chunk_read <= 0))
-          #   break
 
           # Call garbage collector
           gc()
@@ -1978,7 +1967,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             dbWriteTable(clean_db_conn2, "clean_data_table", chunk_read, append = TRUE)
 
             # Standardize the output format
-            standardize_file_output(df, output_folder, flag_lookup_table, paste0(dataset_code, "_non_linkage"))
+            standardize_file_output(chunk_read, output_folder, flag_lookup_table, paste0(dataset_code, "_non_linkage"))
           }
 
           # Remove the read chunk and then call garbage collect

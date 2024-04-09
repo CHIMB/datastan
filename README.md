@@ -16,7 +16,7 @@ This package would be most beneficial in the field of data science,
 specifically data-linkage and data analysis as the `datastan` package
 would help minimize the time spent on writing standardization rules for
 each dataset by using the standardization rules of the package to
-normalize disparate source files to a common format reading it for
+normalize disparate source files to a common format to ready it for
 record-linkage and analysis.
 
 # Installation
@@ -34,6 +34,16 @@ using `install_github()`:
 
 ``` r
 devtools::install_github("CHIMB/datastan")
+```
+
+To install datastan locally from GitHub, select the most recent release
+from the right-hand tab on the GitHub repository page. Download the
+<b>Source code (zip)</b> file, then move over to RStudio. You may then
+run the code:
+
+``` r
+path_to_pkg <- file.choose() # Select the unzipped package you downloaded from GitHub.
+devtools::install_local(path_to_pkg)
 ```
 
 # Usage

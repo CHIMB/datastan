@@ -36,6 +36,12 @@ Afterwards, you may install the automated.data.standardization package using `in
 devtools::install_github("CHIMB/datastan")
 ```
 
+To install datastan locally from GitHub, select the most recent release from the right-hand tab on the GitHub repository page. Download the <b>Source code (zip)</b> file, then move over to RStudio. You may then run the code:
+```{r local-install, eval = FALSE}
+path_to_pkg <- file.choose() # Select the unzipped package you downloaded from GitHub.
+devtools::install_local(path_to_pkg)
+```
+
 # Usage
 
 Before standardizing data can take place, you must enter the standardizing rules for the desired columns using the Metadata User Interface application, which must be supplied with an <b>.sqlite</b> file. To create an empty file for modification, you may run the `create_new_metadata()` function from the `datastan` package:
