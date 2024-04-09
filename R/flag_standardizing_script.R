@@ -576,8 +576,8 @@ create_standardizing_options_lookup <- function(convert_name_case, convert_name_
     chunk_size <- 100000
 
   # Convert Location Based Fields to ASCII
-  if(missing(debug_mode) || (debug_mode != "yes" && debug_mode != "no"))
-    debug_mode <- "no"
+  if(missing(debug_mode) || (debug_mode != "on" && debug_mode != "off"))
+    debug_mode <- "off"
 
   # Convert Location Based Fields to ASCII
   if(missing(max_file_size_output) || (max_file_size_output <= 0))

@@ -887,6 +887,8 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           curr_source_field_id <- source_field_ids[i]
           unprocessed_provinces <- source_data_frame[[curr_province_field]]
 
+          #print(unprocessed_provinces)
+
           # Create a query to join categorical_fields and categorical_values tables for the current field
           query <- paste("SELECT cf.source_field_id, cf.source_value, cv.standardized_value",
                          "FROM categorical_fields cf",
@@ -899,8 +901,12 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           # Create a lookup table for the current province field
           province_lookup <- setNames(province_vals$standardized_value, tolower(province_vals$source_value))
 
+          #print(province_lookup)
+
           # Vectorized standardization of gender values for the current field
           standardized_provinces <- province_lookup[tolower(unprocessed_provinces)]
+
+          #print(standardized_provinces)
 
           # Replace NA values
           standardized_provinces[is.na(standardized_provinces)] <- ""
@@ -1595,7 +1601,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
     output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
     if(output_health_and_program_data_value == "yes"){
       # Create the full path to the output SQLite file within the output folder
-      output_sqlite_file2 <- file.path(output_folder, paste0(dataset_code, "_health_and_program_data.sqlite"))
+      output_sqlite_file2 <- file.path(output_folder, paste0(dataset_code, "_non_linkage_data.sqlite"))
 
       # Create a new data base (SQLite) that we can append to
       clean_db_conn2 <- dbConnect(RSQLite::SQLite(), output_sqlite_file2)
@@ -1633,6 +1639,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       tryCatch({
         # Run a while loop that will continue reading in chunks until we break or get an error
         while(TRUE){
+
           # Skip the header if it's not the first iteration, use "select = " to get only the columns we need
           if (rows_read == 0 && dataset_requires_header == 1) {
             header_columns <- as.character(fread(input = file_path, header = FALSE, nrow = 1, fill = TRUE))
@@ -1649,20 +1656,41 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           if(!is.null(header_columns))
             colnames(chunk_read) <- header_columns
 
-          # Extract the fields we need for linkage and pass the rest off.
-          tryCatch({
-            chunk <- select(chunk_read, all_of(column_numbers)) # Added "all_of() around col_nums
-          },
-          error = function(e){
-            stop("ERROR: Check metadata and ensure the source file has a valid header row.")
-          })
+          # Extract the fields we need for linkage.
+          chunk <- select(chunk_read, column_numbers)
 
+          # Determine how many rows were read and print it to console
+          rows_read <- rows_read + nrow(chunk)
+          print(paste("Rows Read: ", rows_read))
+
+          # Get the rows read from this current chunk
+          rows_read_chunk <- nrow(chunk)
+
+          # Modify the reactive value with how many rows have been read, then send a notification
+          total_rows_read(rows_read)
+
+          # If we are outputting the program and health data, run another function to grab all the data we didn't need to standardize
+          output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
+          if(output_health_and_program_data_value == "yes"){
+            # Call function in "flag_standardizing_script.R" to return a dataset containing the health/program data
+            chunk_read <- compile_health_and_program_data(chunk_read, standardization_rules_metadata_conn, dataset_id)
+            chunk_read[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(chunk_read) - 1)
+            dbWriteTable(clean_db_conn2, "clean_data_table", chunk_read, append = TRUE)
+
+            # Standardize the output format
+            standardize_file_output(chunk_read, output_folder, flag_lookup_table, paste0(dataset_code, "_non_linkage"))
+          }
+
+          # Remove the read chunk that was used for non-linkage purposes and call garbage collector
+          rm(chunk_read)
+          gc()
 
           #Get the number of fields that the data SHOULD have
           fields_found <- ncol(chunk)
-
-          if(flag_lookup_table["debug_mode"] == "on")
+          if(flag_lookup_table["debug_mode"] == "on"){
             print(paste("We found [", fields_found, "] fields."))
+            cat("\n")
+          }
 
           if(fields_found != num_of_expected_fields){
             stop(paste("Error In pre_process_chunks(), number of columns read does ",
@@ -1678,58 +1706,34 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           # Add a sequential record primary key to the chunk
           chunk[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(chunk) - 1)
 
+          # Increment the record primary key counter
+          record_primary_key <- record_primary_key + nrow(chunk)
+
           # Clean the data frame using our pre_process_data() function
-          clean_dataframe <- pre_process_data(chunk, split_data, standardization_rules_metadata_conn, dataset_id,
-                                              standardized_name_lookup, standardized_function_lookup, flag_lookup_table)
+          chunk <- pre_process_data(chunk, split_data, standardization_rules_metadata_conn, dataset_id,
+                                    standardized_name_lookup, standardized_function_lookup, flag_lookup_table)
+
           # Replace NA values with ""
-          clean_dataframe[is.na(clean_dataframe)] <- ""
+          chunk[is.na(chunk)] <- ""
 
           # Append the clean_dataframe to the SQLite database
-          dbWriteTable(clean_db_conn, "clean_data_table", clean_dataframe, append = TRUE)
+          dbWriteTable(clean_db_conn, "clean_data_table", chunk, append = TRUE)
 
           # Standardize the output format
-          standardize_file_output(clean_dataframe, output_folder, flag_lookup_table, dataset_code)
+          standardize_file_output(chunk, output_folder, flag_lookup_table, dataset_code)
 
-          # Garbage collect
+          # Remove the cleaned data frame, then call garbage collector
+          rm(chunk)
           gc()
 
-          # If we are outputting the program and health data, run another function to grab all the data we didn't need to standardize
-          output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
-          if(output_health_and_program_data_value == "yes"){
-            # Call function in "flag_standardizing_script.R" to return a dataset containing the health/program data
-            df <- compile_health_and_program_data(chunk_read, standardization_rules_metadata_conn, dataset_id)
-            df[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(clean_dataframe) - 1)
-            dbWriteTable(clean_db_conn2, "clean_data_table", df, append = TRUE)
-
-            # Standardize the output format
-            standardize_file_output(df, output_folder, flag_lookup_table, paste0(dataset_code, "_non_linkage"))
-          }
-
-          # Garbage collect
-          gc()
-
-          # Increment the record primary key counter
-          record_primary_key <- record_primary_key + nrow(clean_dataframe)
-          rows_read          <- rows_read + nrow(chunk)
-
-          # Modify the reactive value with how many rows have been read, then send a notification
-          total_rows_read(rows_read)
           tryCatch({
-            showNotification(paste("Total Rows Read:", as.integer(total_rows_read())), type = "warning", closeButton = FALSE)
+            showNotification(paste("Total Rows Processed:", as.integer(total_rows_read())), type = "warning", closeButton = FALSE)
           },
           error = function(e){
             print("Can't send notification without a UI.")
           })
 
-          # Determine how many rows were read on this iteration, and print the total amount read
-          rows_read_chunk <- nrow(chunk)
-          print(paste("Rows Read: ", rows_read))
-
-          # Remove the cleaned data frame and read chunk, then call garbage collector
-          rm(clean_dataframe, chunk)
-          gc()
-
-          # If the most recently read chunk is less than our chunking size, we've read the last bit so break
+          # If the size of the read chunk is less than our chunk size, break out of the loop
           if(rows_read_chunk < chunk_size)
             break
         }
@@ -1780,6 +1784,9 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       record_primary_key <- 1
       header_columns <- NULL
 
+      # # Establish a connection to the csv file
+      # file_conn <- file(file_path, "rb")
+
       tryCatch({
         while(TRUE){
           gc()
@@ -1787,11 +1794,13 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           # Skip the header if it's not the first iteration
           if (rows_read == 0 && dataset_requires_header == 1) {
             header_columns <- as.character(fread(input = file_path, header = FALSE, nrow = 1, fill = TRUE))
-            chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read + 1, )
+            chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read + 1)
+            # chunk_read <- read.csv(file_conn, header = FALSE, nrows = chunk_size, colClasses = "character", skip = rows_read + 1)
             rows_read <- 1
           }
           else{
             chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read)
+            # chunk_read <- read.csv(file_conn, header = FALSE, nrows = chunk_size, colClasses = "Character")
           }
 
           # Call garbage collector
@@ -1801,8 +1810,34 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           if(!is.null(header_columns))
             colnames(chunk_read) <- header_columns
 
-          # Extract the fields we need for linkage and pass the rest off.
+          # Extract the fields we need for linkage.
           chunk <- select(chunk_read, column_numbers)
+
+          # Determine how many rows were read and print it to console
+          rows_read <- rows_read + nrow(chunk)
+          print(paste("Rows Read: ", rows_read))
+
+          # Get the rows read from this current chunk
+          rows_read_chunk <- nrow(chunk)
+
+          # Modify the reactive value with how many rows have been read, then send a notification
+          total_rows_read(rows_read)
+
+          # If we are outputting the program and health data, run another function to grab all the data we didn't need to standardize
+          output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
+          if(output_health_and_program_data_value == "yes"){
+            # Call function in "flag_standardizing_script.R" to return a dataset containing the health/program data
+            chunk_read <- compile_health_and_program_data(chunk_read, standardization_rules_metadata_conn, dataset_id)
+            chunk_read[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(chunk_read) - 1)
+            dbWriteTable(clean_db_conn2, "clean_data_table", chunk_read, append = TRUE)
+
+            # Standardize the output format
+            standardize_file_output(chunk_read, output_folder, flag_lookup_table, paste0(dataset_code, "_non_linkage"))
+          }
+
+          # Remove the read chunk that was used for non-linkage purposes and call garbage collector
+          rm(chunk_read)
+          gc()
 
           #Get the number of fields that the data SHOULD have
           fields_found <- ncol(chunk)
@@ -1825,59 +1860,32 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           # Add a sequential record primary key to the chunk
           chunk[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(chunk) - 1)
 
+          # Increment the record primary key counter
+          record_primary_key <- record_primary_key + nrow(chunk)
+
           # Clean the data frame using our pre_process_data() function
-          clean_dataframe <- pre_process_data(chunk, split_data, standardization_rules_metadata_conn, dataset_id,
+          chunk <- pre_process_data(chunk, split_data, standardization_rules_metadata_conn, dataset_id,
                                               standardized_name_lookup, standardized_function_lookup, flag_lookup_table)
 
           # Replace NA values with ""
-          clean_dataframe[is.na(clean_dataframe)] <- ""
+          chunk[is.na(chunk)] <- ""
 
           # Append the clean_dataframe to the SQLite database
-          dbWriteTable(clean_db_conn, "clean_data_table", clean_dataframe, append = TRUE)
+          dbWriteTable(clean_db_conn, "clean_data_table", chunk, append = TRUE)
 
           # Standardize the output format
-          standardize_file_output(clean_dataframe, output_folder, flag_lookup_table, dataset_code)
+          standardize_file_output(chunk, output_folder, flag_lookup_table, dataset_code)
 
-          # Garbage collect
+          # Remove the cleaned data frame, then call garbage collector
+          rm(chunk)
           gc()
 
-          # If we are outputting the program and health data, run another function to grab all the data we didn't need to standardize
-          output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
-          if(output_health_and_program_data_value == "yes"){
-            # Call function in "flag_standardizing_script.R" to return a dataset containing the health/program data
-            df <- compile_health_and_program_data(chunk_read, standardization_rules_metadata_conn, dataset_id)
-            df[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(clean_dataframe) - 1)
-            dbWriteTable(clean_db_conn2, "clean_data_table", df, append = TRUE)
-
-            # Standardize the output format
-            standardize_file_output(df, output_folder, flag_lookup_table, paste0(dataset_code, "_non_linkage"))
-          }
-
-          # Garbage collect
-          gc()
-
-          # Increment the record primary key counter
-          record_primary_key <- record_primary_key + nrow(clean_dataframe)
-
-          # Determine how many rows were read and print it to console
-          rows_read <- rows_read + nrow(chunk)
-          print(paste("Rows Read: ", rows_read))
-
-          # Modify the reactive value with how many rows have been read, then send a notification
-          total_rows_read(rows_read)
           tryCatch({
-            showNotification(paste("Total Rows Read:", as.integer(total_rows_read())), type = "warning", closeButton = FALSE) #put a try/catch around this?
+            showNotification(paste("Total Rows Processed:", as.integer(total_rows_read())), type = "warning", closeButton = FALSE)
           },
           error = function(e){
             print("Can't send notification without a UI.")
           })
-
-          # Get the rows read from this current chunk
-          rows_read_chunk <- nrow(chunk)
-
-          # Remove the cleaned data frame and read chunk, then call garbage collector
-          rm(clean_dataframe, chunk)
-          gc()
 
           # If the size of the read chunk is less than our chunk size, break out of the loop
           if(rows_read_chunk < chunk_size)
@@ -1930,18 +1938,52 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
           # Skip the header if it's not the first iteration
           if (rows_read == 0 && dataset_requires_header == 1) {
-            chunk_read <- read_sas(file_path, n_max = chunk_size, skip = rows_read + 1)
+            chunk_read <- read_sas(file_path, n_max = chunk_size, skip = rows_read + 1, encoding = "latin1", .name_repair = "minimal")
             rows_read <- 1
           }
           else{
-            chunk_read <- read_sas(file_path, n_max = chunk_size, skip = rows_read)
+            chunk_read <- read_sas(file_path, n_max = chunk_size, skip = rows_read, encoding = "latin1", .name_repair = "minimal")
           }
+
+          #print(nrow(chunk_read))
+          #print(length(chunk_read))
+
+          if(nrow(chunk_read) == 0){
+            break
+          }
+
+          # if(length(chunk_read <= 0))
+          #   break
 
           # Call garbage collector
           gc()
 
           # Extract the fields we need for linkage and pass the rest off.
           chunk <- select(chunk_read, column_numbers)
+
+          # Determine how many rows were read on this iteration, and print the total number read to console
+          chunk_rows <- nrow(chunk)
+          rows_read <- rows_read + chunk_rows
+          print(paste("Rows Read: ", rows_read))
+
+          # Modify the reactive value with how many rows have been read, then send a notification
+          total_rows_read(rows_read)
+
+          # If we are outputting the program and health data, run another function to grab all the data we didn't need to standardize
+          output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
+          if(output_health_and_program_data_value == "yes"){
+            # Call function in "flag_standardizing_script.R" to return a dataset containing the health/program data
+            chunk_read <- compile_health_and_program_data(chunk_read, standardization_rules_metadata_conn, dataset_id)
+            chunk_read[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(chunk_read) - 1)
+            dbWriteTable(clean_db_conn2, "clean_data_table", chunk_read, append = TRUE)
+
+            # Standardize the output format
+            standardize_file_output(df, output_folder, flag_lookup_table, paste0(dataset_code, "_non_linkage"))
+          }
+
+          # Remove the read chunk and then call garbage collect
+          rm(chunk_read)
+          gc()
 
           #Get the number of fields that the data SHOULD have
           fields_found <- ncol(chunk)
@@ -1965,63 +2007,36 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           # Add a sequential record primary key to the chunk
           chunk[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(chunk) - 1)
 
+          # Increment the record primary key counter
+          record_primary_key <- record_primary_key + nrow(chunk)
+
           # Clean the data frame using our pre_process_data() function
-          clean_dataframe <- pre_process_data(chunk, split_data, standardization_rules_metadata_conn, dataset_id,
-                                              standardized_name_lookup, standardized_function_lookup, flag_lookup_table)
+          chunk <- pre_process_data(chunk, split_data, standardization_rules_metadata_conn, dataset_id,
+                                    standardized_name_lookup, standardized_function_lookup, flag_lookup_table)
 
           # Replace NA values with ""
-          clean_dataframe[is.na(clean_dataframe)] <- ""
+          chunk[is.na(chunk)] <- ""
 
           # Append the clean_dataframe to the SQLite database
-          dbWriteTable(clean_db_conn, "clean_data_table", clean_dataframe, append = TRUE)
+          dbWriteTable(clean_db_conn, "clean_data_table", chunk, append = TRUE)
 
           # Standardize the output format
-          standardize_file_output(clean_dataframe, output_folder, flag_lookup_table, dataset_code)
+          standardize_file_output(chunk, output_folder, flag_lookup_table, dataset_code)
 
-          # Garbage collect
+          # Remove the cleaned data frame, then call garbage collector
+          rm(chunk)
           gc()
 
-          # If we are outputting the program and health data, run another function to grab all the data we didn't need to standardize
-          output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
-          if(output_health_and_program_data_value == "yes"){
-            # Call function in "flag_standardizing_script.R" to return a dataset containing the health/program data
-            df <- compile_health_and_program_data(chunk_read, standardization_rules_metadata_conn, dataset_id)
-            df[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(clean_dataframe) - 1)
-            dbWriteTable(clean_db_conn2, "clean_data_table", df, append = TRUE)
-
-            # Standardize the output format
-            standardize_file_output(df, output_folder, flag_lookup_table, paste0(dataset_code, "_non_linkage"))
-          }
-
-          # Garbage collect
-          gc()
-
-          # Increment the record primary key counter
-          record_primary_key <- record_primary_key + nrow(clean_dataframe)
-
-          # Determine how many rows were read on this iteration, and print the total number read to console
-          chunk_rows <- nrow(chunk)
-          rows_read <- rows_read + chunk_rows
-          print(paste("Rows Read: ", rows_read))
-
-          # Modify the reactive value with how many rows have been read, then send a notification
-          total_rows_read(rows_read)
           tryCatch({
-            showNotification(paste("Total Rows Read:", as.integer(total_rows_read())), type = "warning", closeButton = FALSE) #put a try/catch around this?
+            showNotification(paste("Total Rows Processed:", as.integer(total_rows_read())), type = "warning", closeButton = FALSE)
           },
           error = function(e){
             print("Can't send notification without a UI.")
           })
 
-          # Remove the chunk and clean dataframe
-          rm(chunk, clean_dataframe)
-          gc()
-
           # If the size of the read chunk is less than our chunk size, break out of the loop
-          if(chunk_rows < chunk_size){
+          if(chunk_rows < chunk_size)
             break
-          }
-
         }
       },
       error = function(e){
