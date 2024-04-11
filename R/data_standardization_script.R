@@ -66,14 +66,13 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       # Add the primary key column from the source data frame to the processed data frame
       processed_data_frame[["record_primary_key"]] <- source_data_frame[["record_primary_key"]]
 
-      # Look up the value for "impute_sex" in the flag look up table to create
-      # two temporary vectors of strings and genders to compare between after all
-      # functions are completed.
-      impute_sex_value <- flag_lookup["impute_sex"]
-      if(impute_sex_value == "yes"){
-        temporary_names   <- c()
-        temporary_genders <- c()
-      }
+      #impute_sex_value <- flag_lookup["impute_sex"]
+      #if(impute_sex_value == "yes"){
+      temporary_names   <- c()
+      temporary_genders <- c()
+      primary_name_col  <- ""
+      gender_col        <- ""
+      #}
 
       #----
       # pre_process_record_primary_key()
@@ -221,7 +220,8 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
         # Look up flag value for if we will be trying to impute gender, store the processed names
         impute_sex_value <- flag_lookup["impute_sex"]
         if(impute_sex_value == "yes"){
-          temporary_names <<- processed_first_names
+          temporary_names  <<- processed_first_names
+          primary_name_col <<- standardized_col_name
         }
 
         # Look up the flag value for whether we want to create an additional column
@@ -682,6 +682,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           impute_sex_value <- flag_lookup["impute_sex"]
           if(impute_sex_value == "yes"){
             temporary_genders <<- standardized_genders
+            gender_col        <<- standardized_col_name
           }
           # else{
           #   # Handle cases where source_value doesn't exist in the look up table
@@ -1465,12 +1466,10 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       }
       #----
 
-      # Once we finish processing all the original field, if the user wants to impute
-      # missing gender values, we will call the impute_sex() function using the
-      # values we grabbed earlier
+      # Impute sex once finished (TODO: Pass the primary_name_col and gender_col values to keep it abstract [for internal imputations])
+      # USE THE MISSING() FUNCTION TO HANDLE THE DIFFERENCE BETWEEN INTERNAL AND CUSTOM!
       impute_sex_value <- flag_lookup["impute_sex"]
-      sex_impute_type  <- flag_lookup["impute_sex_type"]
-      if(impute_sex_value == "yes" && sex_impute_type != "internal"){
+      if(impute_sex_value == "yes" && primary_name_col != "" && gender_col != ""){
         processed_data_frame <- impute_sex(processed_data_frame, temporary_names, temporary_genders, flag_lookup)
       }
 
@@ -1741,23 +1740,6 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       })
       print("Finished Reading!")
 
-      # Last check to see if gender imputation is to be done internally
-      sex_impute_type  <- flag_lookup_table["impute_sex_type"]
-      impute_sex_value <- flag_lookup_table["impute_sex"]
-      if(sex_impute_type == "internal" && impute_sex_value == "yes"){
-        source_df <- dbReadTable(clean_db_conn, 'clean_data_table')
-        final_df  <- impute_sex(source_df, source_df$primary_given_name, source_df$gender, flag_lookup_table)
-        dbWriteTable(clean_db_conn, "clean_data_table", final_df, overwrite = TRUE)
-      }
-
-      # # Determine whether the user wants the file output in a different format
-      # standardize_file_output(clean_db_conn, output_folder, flag_lookup_table, dataset_code)
-      #
-      # # Determine whether the user wants the non-linkage data in a different format
-      # if(flag_lookup_table["output_health_and_program_data"] == "yes"){
-      #   standardize_file_output(clean_db_conn2, output_folder, flag_lookup_table, paste0(dataset_code, "_non_linkage"))
-      # }
-
       # Disconnect from the database
       dbDisconnect(clean_db_conn)
     }
@@ -1778,9 +1760,6 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       record_primary_key <- 1
       header_columns <- NULL
 
-      # # Establish a connection to the csv file
-      # file_conn <- file(file_path, "rb")
-
       tryCatch({
         while(TRUE){
           gc()
@@ -1788,13 +1767,11 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           # Skip the header if it's not the first iteration
           if (rows_read == 0 && dataset_requires_header == 1) {
             header_columns <- as.character(fread(input = file_path, header = FALSE, nrow = 1, fill = TRUE))
-            chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read + 1)
-            # chunk_read <- read.csv(file_conn, header = FALSE, nrows = chunk_size, colClasses = "character", skip = rows_read + 1)
+            chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read + 1, fill = TRUE, data.table = TRUE)
             rows_read <- 1
           }
           else{
-            chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read)
-            # chunk_read <- read.csv(file_conn, header = FALSE, nrows = chunk_size, colClasses = "Character")
+            chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read, fill = TRUE, data.table = TRUE)
           }
 
           # Call garbage collector
@@ -1895,15 +1872,6 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       })
 
       print("Finished Reading!")
-
-      # Last check to see if gender imputation is to be done internally
-      sex_impute_type  <- flag_lookup_table["impute_sex_type"]
-      impute_sex_value <- flag_lookup_table["impute_sex"]
-      if(sex_impute_type == "internal" && impute_sex_value == "yes"){
-        source_df <- dbReadTable(clean_db_conn, 'clean_data_table')
-        final_df  <- impute_sex(source_df, source_df$primary_given_name, source_df$gender, flag_lookup_table)
-        dbWriteTable(clean_db_conn, "clean_data_table", final_df, overwrite = TRUE)
-      }
 
       # Disconnect from the database connection
       dbDisconnect(clean_db_conn)
@@ -2037,20 +2005,11 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       })
       print("Finished Reading!")
 
-      # Last check to see if gender imputation is to be done internally
-      sex_impute_type  <- flag_lookup_table["impute_sex_type"]
-      impute_sex_value <- flag_lookup_table["impute_sex"]
-      if(sex_impute_type == "internal" && impute_sex_value == "yes"){
-        source_df <- dbReadTable(clean_db_conn, 'clean_data_table')
-        final_df  <- impute_sex(source_df, source_df$primary_given_name, source_df$gender, flag_lookup_table)
-        dbWriteTable(clean_db_conn, "clean_data_table", final_df, overwrite = TRUE)
-      }
-
       # Close the SQLite database connection
       dbDisconnect(clean_db_conn)
 
     }
-    # If the file_type is a fixed width format, we will handle reading the file this way (READL_LINES & READ_FWF)
+    # If the file_type is a fixed width format, we will handle reading the file this way (READ_LINES & READ_FWF)
     else if (my_file_type == "fwf"){
       # Set our chunking size
       chunk_size <- chunking_size
@@ -2172,7 +2131,6 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             break
           }
         }
-
       },
       error = function(e){
         print(e)
@@ -2184,15 +2142,6 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       })
 
       print("Finished Reading!")
-
-      # Last check to see if gender imputation is to be done internally
-      sex_impute_type  <- flag_lookup_table["impute_sex_type"]
-      impute_sex_value <- flag_lookup_table["impute_sex"]
-      if(sex_impute_type == "internal" && impute_sex_value == "yes"){
-        source_df <- dbReadTable(clean_db_conn, 'clean_data_table')
-        final_df  <- impute_sex(source_df, source_df$primary_given_name, source_df$gender, flag_lookup_table)
-        dbWriteTable(clean_db_conn, "clean_data_table", final_df, overwrite = TRUE)
-      }
 
       # Close the SQLite database connection
       dbDisconnect(clean_db_conn)
@@ -2304,10 +2253,36 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
   if(is.null(input_file_path)){
     error_handle(standardization_rules_connection, "ERROR: File path to unclean dataset not provided, provide a path in the input flags via file_path.", NULL, input_file_path, output_folder)
   }
+  #----#
 
+  # Error handling, a valid chunk size was selected
+  #----#
   chunk_size <- as.integer(flag_lookup["chunk_size"])
   if(is.na(chunk_size) || (chunk_size < 10000 || chunk_size > 1000000)){
-    error_handle(standardization_rules_connection, "ERROR: Invalid chunking size. Must be >= 10k and <= 1M", NULL, input_file_path, output_folder)
+    error_handle(standardization_rules_connection, "ERROR: Invalid chunking size. Must be >= 10k and <= 1M.", NULL, input_file_path, output_folder)
+  }
+  #----#
+
+  # Error handling, if imputing sex, verify that the chosen file is valid
+  #----#
+  impute_sex_value <- flag_lookup["impute_sex"]
+  if(impute_sex_value == "yes"){
+    impute_sex_type <- flag_lookup["impute_sex_type"]
+    if(impute_sex_type == "custom"){
+      imputation_sex_file <- flag_lookup["chosen_sex_file"]
+      # Get the file extension and do some error handling
+      file_extension <- tools::file_ext(imputation_sex_file)
+      if(file_extension != "csv"){
+        error_handle(standardization_rules_connection, "ERROR: Supplied custom sex imputation file is not a csv.", NULL, input_file_path, output_folder)
+      }
+
+      # Read the first few lines to verify the contents
+      sex_imputation_df <- fread(imputation_sex_file, nrows = 0)
+      if(!"primary_given_name" %in% colnames(sex_imputation_df))
+        error_handle(standardization_rules_connection, "ERROR: Sex imputation file is missing the 'primary_given_name' column.", NULL, input_file_path, output_folder)
+      if(!"sex" %in% colnames(sex_imputation_df))
+        error_handle(standardization_rules_connection, "ERROR: Sex imputation file is missing the 'sex' column.", NULL, input_file_path, output_folder)
+    }
   }
   #----#
 
@@ -2343,7 +2318,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
     return(df)
   }
   else{
-    print("File is too large to open and return or a maximum file size was not supplied.")
+    print("File is too large to open and return, or a maximum file size was not provided.")
     return(data.frame())
   }
 

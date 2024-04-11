@@ -180,14 +180,13 @@ list_curr_surnames <- function(names_to_append, df){
 #' sexes, otherwise we may attempt to impute sex internally by using the data within the processed file.
 #' @param source_df The current processed/cleaned data frame of the input file.
 #' @param processed_names The current processed primary given names on this chunk iteration or after processing finishes.
-#' @param processed_genders The current processed genders on this chunk iteration or after processing finishes.
+#' @param processed_sexes The current processed sexes on this chunk iteration or after processing finishes.
 #' @param flag_lookup_table Lookup table used to determine what output file format is to be used. Output format can be of type rdata, csv, xlsx or just sqlite.
 #' @return The original data frame with an additional column named "imputed_sex".
 #' @examples
 #' df <- impute_sex(df, c("John", "Jane", "Cole", "John"), c("M", "F", "C", NA), flag_lookup)
 #' @export
-impute_sex <- function(source_df, processed_names, processed_genders, flag_lookup_table){ # Change wordings a descriptions to inferring sex
-  print("Imputing Sex")
+impute_sex <- function(source_df, processed_names, processed_sexes, flag_lookup_table){ # Change wordings a descriptions to inferring sex
   # Get what imputation type we are doing
   imputation_type <- flag_lookup_table["impute_sex_type"]
 
@@ -229,78 +228,115 @@ impute_sex <- function(source_df, processed_names, processed_genders, flag_looku
     return(source_df)
   }
   else if (imputation_type == "custom"){
+    sex_imputation_file <- flag_lookup_table[["chosen_sex_file"]]
+    sex_infer_df <- read_csv(sex_imputation_file, show_col_types = FALSE)
 
-    gender_file_path <- flag_lookup_table[["chosen_gender_file"]]
-    gender_infer_df <- read_csv(gender_file_path, show_col_types = FALSE)
+    # # Group by name and calculate the majority gender for each name
+    # sex_summary <- sex_infer_df %>%
+    #   group_by(primary_given_name) %>%
+    #   summarise(sex = names(which.max(table(sex))))
+
+    # # Remove the initial sex imputation data frame
+    # rm(sex_infer_df)
 
     # Filter out names with NA genders
-    na_indices <- which(is.na(processed_genders) | processed_genders == "NA" | processed_genders == "")
+    na_indices <- which(is.na(processed_sexes) | processed_sexes == "NA" | processed_sexes == "")
     processed_names_na <- processed_names[na_indices]
-    print(processed_names_na)
     # Step 1: Find the indices where the names exist in the first names list
-    indicies_list <- match(processed_names_na, gender_infer_df$primary_given_name)
+    indicies_list <- match(tolower(processed_names_na), tolower(sex_infer_df$primary_given_name))
 
     # Step 2: Get the majority sex for each name
-    majority_sex <- gender_infer_df[indicies_list, "sex"]
+    majority_sex <- sex_infer_df[indicies_list, "sex"]
 
     # Step 3: Un-list the sexes
-    processed_genders[na_indices] <- unlist(majority_sex)
+    processed_sexes[na_indices] <- unlist(majority_sex)
 
     # Step 4: Add the imputed sex to a new column
-    source_df[["imputed_sex"]] <- paste(processed_genders)
+    source_df[["imputed_sex"]] <- paste(processed_sexes)
     source_df[["imputed_sex"]] <- trimws(source_df[["imputed_sex"]])
 
-    # Remove the data frame and clean everything up
-    rm(gender_infer_df)
+    # Remove the sex summary data frame
+    rm(sex_infer_df)
     gc()
 
     return(source_df)
   }
   else if (imputation_type == "internal"){
+    # Create a sex imputation data frame out of the processed names and sexes
+    sex_impuation_df <- data.frame(
+      primary_given_name = source_df[["primary_given_name"]],
+      sex = source_df[["gender"]]
+    )
+
+    # Group by name and calculate the majority gender for each name
+    sex_summary <- sex_impuation_df %>%
+      group_by(primary_given_name) %>%
+      summarise(sex = names(which.max(table(sex))))
+
+    # Remove the initial sex imputation data frame
+    rm(sex_impuation_df)
+
     # Filter out names with NA genders
-    na_indices <- which(is.na(processed_genders) | processed_genders == "NA" | processed_genders == "")
+    na_indices <- which(is.na(processed_sexes) | processed_sexes == "NA" | processed_sexes == "")
 
     processed_names_na <- processed_names[na_indices]
 
-    # Step 1: Use vectorized operations for gender imputation, create a named vector for faster look-up
-    first_names_lookup <- setNames(source_df$gender, source_df$primary_given_name)
+    # Step 1: Find the indices where the names exist in the first names list
+    indicies_list <- match(tolower(processed_names_na), tolower(sex_summary$primary_given_name))
 
-    # Step 2: Find the indices where the names exist in the first names list
-    indices_list <- lapply(processed_names_na, function(name) which(names(first_names_lookup) == name))
+    # Step 2: Get the majority sex for each name
+    majority_sex <- sex_summary[indicies_list, "sex"]
 
-    # Step 3: Create a function to determine the majority gender for each name
-    get_majority_sex <- function(indices) {
-      if (length(indices) == 0) {
-        return(NA)  # Return NA if the name doesn't exist in the first names list
-      }
-      # Filter out NA and empty strings
-      valid_genders <- na.omit(source_df$gender[unlist(indices)])
-      valid_genders <- valid_genders[valid_genders != ""]  # Filter out empty strings
+    # Step 3: Un-list the sexes
+    processed_sexes[na_indices] <- unlist(majority_sex)
 
-      if (length(valid_genders) == 0) {
-        return(NA)  # Return NA if there are no valid genders
-      }
-
-      gender_counts <- table(valid_genders)
-      majority_sex <- names(gender_counts)[which.max(gender_counts)]
-      return(majority_sex)
-    }
-
-    # Step 4: Create a list to store majority genders for each name
-    majority_sexes <- lapply(indices_list, get_majority_sex)
-
-    # Step 5: Create a vector of majority genders corresponding to processed_names_na
-    processed_sexes_na <- unlist(majority_sexes)
-
-    # Step 6: Replace NA genders in processed_genders with imputed genders
-    processed_genders[na_indices] <- processed_sexes_na
-
-    # Step 7: Replace NA genders in processed_genders with imputed genders
-    temporary_sex_imputation_df <- data.frame(names = processed_names, genders = processed_genders)
-
-    # Step 8: Add the new column
-    source_df[["imputed_sex"]] <- paste(source_df[["imputed_sex"]], temporary_sex_imputation_df$genders, sep = " ")
+    # Step 4: Add the imputed sex to a new column
+    source_df[["imputed_sex"]] <- paste(processed_sexes)
     source_df[["imputed_sex"]] <- trimws(source_df[["imputed_sex"]])
+
+    # Remove the sex summary data frame
+    rm(sex_summary)
+    gc()
+
+    # # Step 1: Use vectorized operations for gender imputation, create a named vector for faster look-up
+    # first_names_lookup <- setNames(source_df$gender, source_df$primary_given_name)
+    #
+    # # Step 2: Find the indices where the names exist in the first names list
+    # indices_list <- lapply(processed_names_na, function(name) which(names(first_names_lookup) == name))
+    #
+    # # Step 3: Create a function to determine the majority gender for each name
+    # get_majority_sex <- function(indices) {
+    #   if (length(indices) == 0) {
+    #     return(NA)  # Return NA if the name doesn't exist in the first names list
+    #   }
+    #   # Filter out NA and empty strings
+    #   valid_genders <- na.omit(source_df$gender[unlist(indices)])
+    #   valid_genders <- valid_genders[valid_genders != ""]  # Filter out empty strings
+    #
+    #   if (length(valid_genders) == 0) {
+    #     return(NA)  # Return NA if there are no valid genders
+    #   }
+    #
+    #   gender_counts <- table(valid_genders)
+    #   majority_sex <- names(gender_counts)[which.max(gender_counts)]
+    #   return(majority_sex)
+    # }
+    #
+    # # Step 4: Create a list to store majority genders for each name
+    # majority_sexes <- lapply(indices_list, get_majority_sex)
+    #
+    # # Step 5: Create a vector of majority genders corresponding to processed_names_na
+    # processed_sexes_na <- unlist(majority_sexes)
+    #
+    # # Step 6: Replace NA genders in processed_genders with imputed genders
+    # processed_genders[na_indices] <- processed_sexes_na
+    #
+    # # Step 7: Replace NA genders in processed_genders with imputed genders
+    # temporary_sex_imputation_df <- data.frame(names = processed_names, genders = processed_genders)
+    #
+    # # Step 8: Add the new column
+    # source_df[["imputed_sex"]] <- paste(source_df[["imputed_sex"]], temporary_sex_imputation_df$genders, sep = " ")
+    # source_df[["imputed_sex"]] <- trimws(source_df[["imputed_sex"]])
 
     return(source_df)
   }
