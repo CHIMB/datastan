@@ -21,6 +21,8 @@ record-linkage and analysis.
 
 # Installation
 
+## R Studio Installation
+
 To install datastan from GitHub, begin by installing and loading the
 `devtools` package:
 
@@ -35,6 +37,8 @@ using `install_github()`:
 ``` r
 devtools::install_github("CHIMB/datastan")
 ```
+
+## Local Installation
 
 To install datastan locally from GitHub, select the most recent release
 from the right-hand tab on the GitHub repository page. Download the

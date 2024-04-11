@@ -1629,6 +1629,15 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       record_primary_key <- 1
       header_columns <- NULL
 
+      # Get the number of rows in the data using a command
+      line_count_cmd <- paste("wc -l", file_path)
+
+      # Execute the command and capture the output
+      line_count_output <- system(line_count_cmd, intern = TRUE)
+
+      # Extract the line count from the output
+      line_count <- as.numeric(strsplit(line_count_output, "\\s+")[[1]][1])
+
       tryCatch({
         # Run a while loop that will continue reading in chunks until we break or get an error
         while(TRUE){
@@ -1636,11 +1645,18 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           # Skip the header if it's not the first iteration, use "select = " to get only the columns we need
           if (rows_read == 0 && dataset_requires_header == 1) {
             header_columns <- as.character(fread(input = file_path, header = FALSE, nrow = 1, fill = TRUE))
-            chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, skip = rows_read + 1, fill = TRUE, data.table = TRUE)
+
+            read_cmd <- paste0("tail -n +1 ", file_path, " | head -n ", chunk_size+1)
+            chunk_read <- fread(cmd = read_cmd, colClasses = "character", fill = TRUE, data.table = TRUE)
+
+            # chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, skip = rows_read + 1, fill = TRUE, data.table = TRUE)
             rows_read <- 1
           }
           else{
-            chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, skip = rows_read, fill = TRUE, data.table = TRUE)
+            read_cmd <- paste0("head -n ", rows_read + chunk_size, " ", file_path, " | tail -", chunk_size)
+            chunk_read <- fread(cmd = read_cmd, header = FALSE, colClasses = "character", fill = TRUE, data.table = TRUE, sep = "\t")
+
+            # chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, skip = rows_read, fill = TRUE, data.table = TRUE)
           }
           # Call garbage collector
           gc()
@@ -1727,8 +1743,22 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           })
 
           # If the size of the read chunk is less than our chunk size, break out of the loop
-          if(rows_read_chunk < chunk_size)
+          if(rows_read_chunk < chunk_size){
+            print(paste0("Breaking: ", rows_read_chunk, " < ", chunk_size))
             break
+          }
+
+          # If we read all lines in the file, break
+          if(rows_read >= line_count){
+            print(paste0("Breaking: Read all ", line_count, " rows"))
+            break
+          }
+
+          # Modify the chunking size if there are less rows than need to be read
+          if(line_count - rows_read < chunk_size){
+            chunk_size <- line_count - rows_read
+            print(paste("Almost finished, changing chunk size to:", chunk_size))
+          }
         }
       },
       error = function(e){
@@ -1760,6 +1790,15 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       record_primary_key <- 1
       header_columns <- NULL
 
+      # Get the number of rows in the data using a command
+      line_count_cmd <- paste("wc -l", file_path)
+
+      # Execute the command and capture the output
+      line_count_output <- system(line_count_cmd, intern = TRUE)
+
+      # Extract the line count from the output
+      line_count <- as.numeric(strsplit(line_count_output, "\\s+")[[1]][1])
+
       tryCatch({
         while(TRUE){
           gc()
@@ -1767,11 +1806,18 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           # Skip the header if it's not the first iteration
           if (rows_read == 0 && dataset_requires_header == 1) {
             header_columns <- as.character(fread(input = file_path, header = FALSE, nrow = 1, fill = TRUE))
-            chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read + 1, fill = TRUE, data.table = TRUE)
+
+            read_cmd <- paste0("tail -n +1 ", file_path, " | head -n ", chunk_size+1)
+            chunk_read <- fread(cmd = read_cmd, colClasses = "character", fill = TRUE, data.table = TRUE)
+
+            # chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read + 1, fill = TRUE, data.table = TRUE)
             rows_read <- 1
           }
           else{
-            chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read, fill = TRUE, data.table = TRUE)
+            read_cmd <- paste0("head -n ", rows_read + chunk_size, " ", file_path, " | tail -", chunk_size)
+            chunk_read <- fread(cmd = read_cmd, header = FALSE, colClasses = "character", fill = TRUE, data.table = TRUE, sep = ",")
+
+            # chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read, fill = TRUE, data.table = TRUE)
           }
 
           # Call garbage collector
@@ -1859,8 +1905,21 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           })
 
           # If the size of the read chunk is less than our chunk size, break out of the loop
-          if(rows_read_chunk < chunk_size)
+          if(rows_read_chunk < chunk_size){
+            print(paste0("Breaking: ", rows_read_chunk, " < ", chunk_size))
             break
+          }
+
+          if(rows_read >= line_count){
+            print(paste0("Breaking: Read all ", line_count, " rows"))
+            break
+          }
+
+          # Modify the chunking size if there are less rows than need to be read
+          if(line_count - rows_read < chunk_size){
+            chunk_size <- line_count - rows_read
+            print(paste("Almost finished, changing chunk size to:", chunk_size))
+          }
         }
       },
       error = function(e){
@@ -2165,6 +2224,9 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
     return(clean_sqlite_path)
   }
   #----------------------------------------------------------------------------#
+
+  # Change the scientific notation for numbers
+  options(scipen = 100)
 
   # Establish default lookup flags and replace them if necessary
   #----

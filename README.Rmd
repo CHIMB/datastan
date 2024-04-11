@@ -25,6 +25,8 @@ This package would be most beneficial in the field of data science, specifically
 
 # Installation
 
+## R Studio Installation
+
 To install datastan from GitHub, begin by installing and loading the `devtools` package:
 ```{r install-devtools, eval = FALSE}
 # install.packages("devtools")
@@ -35,6 +37,8 @@ Afterwards, you may install the automated.data.standardization package using `in
 ```{r install-data-standardization-package, eval = FALSE}
 devtools::install_github("CHIMB/datastan")
 ```
+
+## Local Installation
 
 To install datastan locally from GitHub, select the most recent release from the right-hand tab on the GitHub repository page. Download the <b>Source code (zip)</b> file, then move over to RStudio. You may then run the code:
 ```{r local-install, eval = FALSE}
