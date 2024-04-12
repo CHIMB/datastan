@@ -1632,14 +1632,16 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       record_primary_key <- 1
       header_columns <- NULL
 
-      # Get the number of rows in the data using a command
-      line_count_cmd <- paste("wc -l", file_path)
+      if(read_mode == "cmd"){
+        # Get the number of rows in the data using a command
+        line_count_cmd <- paste("wc -l", file_path)
 
-      # Execute the command and capture the output
-      line_count_output <- system(line_count_cmd, intern = TRUE)
+        # Execute the command and capture the output
+        line_count_output <- system(line_count_cmd, intern = TRUE)
 
-      # Extract the line count from the output
-      line_count <- as.numeric(strsplit(line_count_output, "\\s+")[[1]][1])
+        # Extract the line count from the output
+        line_count <- as.numeric(strsplit(line_count_output, "\\s+")[[1]][1])
+      }
 
       tryCatch({
         # Run a while loop that will continue reading in chunks until we break or get an error
@@ -1759,13 +1761,13 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           }
 
           # If we read all lines in the file, break
-          if(rows_read >= line_count){
+          if(read_mode == "cmd" && rows_read >= line_count){
             print(paste0("Breaking: Read all ", line_count, " rows"))
             break
           }
 
           # Modify the chunking size if there are less rows than need to be read
-          if(line_count - rows_read < chunk_size){
+          if(read_mode == "cmd" && line_count - rows_read < chunk_size){
             chunk_size <- line_count - rows_read
             print(paste("Almost finished, changing chunk size to:", chunk_size))
           }
@@ -1977,12 +1979,12 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
           # Skip the header if it's not the first iteration
           if (rows_read == 0 && dataset_requires_header == 1) {
-            chunk_read <- read_sas(file_path, n_max = chunk_size, skip = rows_read + 1, encoding = "latin1")
+            chunk_read <- as.data.table(read_sas(file_path, n_max = chunk_size, skip = rows_read + 1, encoding = "latin1"))
 
             rows_read <- 1
           }
           else{
-            chunk_read <- read_sas(file_path, n_max = chunk_size, skip = rows_read, encoding = "latin1")
+            chunk_read <- as.data.table(read_sas(file_path, n_max = chunk_size, skip = rows_read, encoding = "latin1"))
           }
 
           # If no rows were read from the chunk, then break
@@ -1994,7 +1996,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           gc()
 
           # Extract the fields we need for linkage and pass the rest off.
-          chunk <- select(chunk_read, column_numbers)
+          chunk <- as.data.table(select(chunk_read, column_numbers))
 
           # Determine how many rows were read on this iteration, and print the total number read to console
           chunk_rows <- nrow(chunk)
@@ -2125,11 +2127,10 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           writeLines(chunk, tmp_file)
 
           # Use read_fwf to get the chunked data frame for cleaning
-          chunk_df <- read_fwf(
-            file = tmp_file,
+          chunk_df <- read_fwf(file = tmp_file,
             fwf_widths(data_set_widths, col_names = column_names),
             col_types = cols(.default = "c"),
-            locale = locale(encoding = "latin1")  # Specify the encoding if needed
+            locale = locale(encoding = "latin1")
           )
 
           #Get the number of fields that the data SHOULD have
