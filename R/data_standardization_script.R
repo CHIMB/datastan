@@ -1607,6 +1607,9 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       cat("\n")
     }
 
+    # Determine what reading mode the user chose
+    read_mode <- flag_lookup_table["read_mode"]
+
     start <- proc.time()
 
     # Create a variable to store the clean file path, that way we can return a data frame
@@ -1646,17 +1649,24 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           if (rows_read == 0 && dataset_requires_header == 1) {
             header_columns <- as.character(fread(input = file_path, header = FALSE, nrow = 1, fill = TRUE))
 
-            read_cmd <- paste0("tail -n +1 ", file_path, " | head -n ", chunk_size+1)
-            chunk_read <- fread(cmd = read_cmd, colClasses = "character", fill = TRUE, data.table = TRUE)
+            if(read_mode == "cmd"){
+              read_cmd <- paste0("tail -n +1 ", file_path, " | head -n ", chunk_size+1)
+              chunk_read <- fread(cmd = read_cmd, colClasses = "character", fill = TRUE, data.table = TRUE)
+            }
+            else{
+              chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, skip = rows_read + 1, fill = TRUE, data.table = TRUE)
+            }
 
-            # chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, skip = rows_read + 1, fill = TRUE, data.table = TRUE)
             rows_read <- 1
           }
           else{
-            read_cmd <- paste0("head -n ", rows_read + chunk_size, " ", file_path, " | tail -", chunk_size)
-            chunk_read <- fread(cmd = read_cmd, header = FALSE, colClasses = "character", fill = TRUE, data.table = TRUE, sep = "\t")
-
-            # chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, skip = rows_read, fill = TRUE, data.table = TRUE)
+            if(read_mode == "cmd"){
+              read_cmd <- paste0("head -n ", rows_read + chunk_size, " ", file_path, " | tail -", chunk_size)
+              chunk_read <- fread(cmd = read_cmd, header = FALSE, colClasses = "character", fill = TRUE, data.table = TRUE, sep = "\t")
+            }
+            else{
+              chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, skip = rows_read, fill = TRUE, data.table = TRUE)
+            }
           }
           # Call garbage collector
           gc()
@@ -1790,14 +1800,16 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       record_primary_key <- 1
       header_columns <- NULL
 
-      # Get the number of rows in the data using a command
-      line_count_cmd <- paste("wc -l", file_path)
+      if(read_mode == "cmd"){
+        # Get the number of rows in the data using a command
+        line_count_cmd <- paste("wc -l", file_path)
 
-      # Execute the command and capture the output
-      line_count_output <- system(line_count_cmd, intern = TRUE)
+        # Execute the command and capture the output
+        line_count_output <- system(line_count_cmd, intern = TRUE)
 
-      # Extract the line count from the output
-      line_count <- as.numeric(strsplit(line_count_output, "\\s+")[[1]][1])
+        # Extract the line count from the output
+        line_count <- as.numeric(strsplit(line_count_output, "\\s+")[[1]][1])
+      }
 
       tryCatch({
         while(TRUE){
@@ -1807,17 +1819,23 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           if (rows_read == 0 && dataset_requires_header == 1) {
             header_columns <- as.character(fread(input = file_path, header = FALSE, nrow = 1, fill = TRUE))
 
-            read_cmd <- paste0("tail -n +1 ", file_path, " | head -n ", chunk_size+1)
-            chunk_read <- fread(cmd = read_cmd, colClasses = "character", fill = TRUE, data.table = TRUE)
-
-            # chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read + 1, fill = TRUE, data.table = TRUE)
+            if(read_mode == "cmd"){
+              read_cmd <- paste0("tail -n +1 ", file_path, " | head -n ", chunk_size+1)
+              chunk_read <- fread(cmd = read_cmd, colClasses = "character", fill = TRUE, data.table = TRUE)
+            }
+            else{
+              chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read + 1, data.table = TRUE)
+            }
             rows_read <- 1
           }
           else{
-            read_cmd <- paste0("head -n ", rows_read + chunk_size, " ", file_path, " | tail -", chunk_size)
-            chunk_read <- fread(cmd = read_cmd, header = FALSE, colClasses = "character", fill = TRUE, data.table = TRUE, sep = ",")
-
-            # chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read, fill = TRUE, data.table = TRUE)
+            if(read_mode == "cmd"){
+              read_cmd <- paste0("head -n ", rows_read + chunk_size, " ", file_path, " | tail -", chunk_size)
+              chunk_read <- fread(cmd = read_cmd, header = FALSE, colClasses = "character", fill = TRUE, data.table = TRUE, sep = ",")
+            }
+            else{
+              chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read, data.table = TRUE)
+            }
           }
 
           # Call garbage collector
@@ -1910,13 +1928,13 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             break
           }
 
-          if(rows_read >= line_count){
+          if(read_mode == "cmd" && rows_read >= line_count){
             print(paste0("Breaking: Read all ", line_count, " rows"))
             break
           }
 
           # Modify the chunking size if there are less rows than need to be read
-          if(line_count - rows_read < chunk_size){
+          if(read_mode == "cmd" && line_count - rows_read < chunk_size){
             chunk_size <- line_count - rows_read
             print(paste("Almost finished, changing chunk size to:", chunk_size))
           }
@@ -1960,6 +1978,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           # Skip the header if it's not the first iteration
           if (rows_read == 0 && dataset_requires_header == 1) {
             chunk_read <- read_sas(file_path, n_max = chunk_size, skip = rows_read + 1, encoding = "latin1")
+
             rows_read <- 1
           }
           else{
@@ -2051,8 +2070,10 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           })
 
           # If the size of the read chunk is less than our chunk size, break out of the loop
-          if(chunk_rows < chunk_size)
+          if(chunk_rows < chunk_size){
+            print(paste0("Breaking: ", chunk_rows, " < ", chunk_size))
             break
+          }
         }
       },
       error = function(e){
@@ -2235,19 +2256,11 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
     flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names",
                   "impute_sex", "impute_sex_type", "chosen_sex_file",
                   "compress_address_whitespace", "remove_address_punctuation", "convert_address_case", "convert_address_to_ascii", "extract_postal_code",
-                  "file_output",
-                  "output_health_and_program_data",
-                  "chunk_size",
-                  "max_file_size_output",
-                  "debug_mode"),
+                  "file_output", "output_health_and_program_data", "chunk_size", "max_file_size_output", "debug_mode", "read_mode"),
     flag_value = c("original", "no", "no", "no", "no", "no", "no",
                    "no", "none", "null",
                    "no", "no", "original", "no", "no",
-                   "sqlite",
-                   "no",
-                   100000,
-                   "null",
-                   "off")
+                   "sqlite", "no", 100000, "null", "off", "path")
   )
 
   flag_lookup <- setNames(flag_values$flag_value, flag_values$flag_code)

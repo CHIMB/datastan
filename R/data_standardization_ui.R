@@ -398,11 +398,22 @@ data_standardization_ui <- fluidPage(
           numericInput("chunking_size", label = "How many rows should be read at a time?", value = NULL, width = validateCssUnit(600)),
           bsButton("chunking_size_help", label = "", icon = icon("question"), style = "info"),
           bsPopover(id = "chunking_size_help", title = "Chunk Size - Help",
-                    content = paste("The chunking size is used to determine how many rows to read in at a time when processing data, you may select",
-                                    "to read in 100k rows, 200k rows, 500k rows, or 1 million rows at a time."),
+                    content = paste("The chunking size is used to determine how many rows to read in at a time when processing data, you may enter",
+                                    "an integer >= 10000 or <= 1000000."),
                     placement = "right", trigger = "hover",
                     options = list(container = "body"))
       ),
+      div(style = "display: flex; justify-content: center; align-items: center;",
+          selectInput("read_mode", label = "What is the File Output Format?",
+                      choices = list("File Path" = "path",
+                                     "Shell Commands" = "cmd"),
+                      selected = "path", width = validateCssUnit(600)),
+          bsButton("read_mode_help", label = "", icon = icon("question"), style = "info"),
+          bsPopover(id = "read_mode_help", title = "Read Mode - Help",
+                    content = paste("Read the data using the normal file path, or use shell commands to help with processing."),
+                    placement = "right", trigger = "hover",
+                    options = list(container = "body"))
+      )
     ),
     align = "center"
     ),
@@ -566,6 +577,7 @@ data_standardization_server <- function(input, output, session){
     file_output <- input$file_output
     output_health_and_program_data <- input$output_health_and_program_data
     chunking_size <- input$chunking_size
+    read_mode <- input$read_mode
 
     # Get the file path
     input_file <- file_path$path
@@ -617,15 +629,11 @@ data_standardization_server <- function(input, output, session){
       flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names",
                     "impute_sex", "impute_sex_type", "chosen_sex_file",
                     "compress_address_whitespace", "remove_address_punctuation", "convert_address_case", "convert_address_to_ascii", "extract_postal_code",
-                    "file_output",
-                    "output_health_and_program_data",
-                    "chunk_size"),
+                    "file_output", "output_health_and_program_data", "chunk_size", "read_mode"),
       flag_value = c(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace, list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names,
                      impute_gender, impute_gender_type, chosen_gender_file,
                      compress_address_whitespace, remove_address_punctuation, convert_address_case, convert_address_to_ascii, extract_postal_codes,
-                     file_output,
-                     output_health_and_program_data,
-                     chunking_size)
+                     file_output,output_health_and_program_data, chunking_size, read_mode)
     )
     #print(flag_values)
     flag_lookup <- setNames(flag_values$flag_value, flag_values$flag_code)

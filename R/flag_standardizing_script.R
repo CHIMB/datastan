@@ -518,6 +518,7 @@ compile_health_and_program_data <- function(source_data_frame, db_conn, dataset_
 #' @param chunk_size How many rows should be read at a time when reading the source file in chunks? (Options: 10000-1000000)
 #' @param debug_mode Print additional information to the console in case of potential bugs? (Options: "on", "off")
 #' @param max_file_size_output What is the max file size that a data frame can be before it isn't returned? (Options: integer in Mega-bytes)
+#' @param read_mode Read delimited data using the base file path, or using shell commands? (Options: "path", "cmd")
 #' @return A lookup table consisting of chosen flags and the assigned default options for bad inputs or undefined choices.
 #' @examples
 #' flags <- create_standardizing_options_lookup(convert_name_case = "upper", impute_sex = "yes", chunk_size = 15000, max_file_size_output = 200)
@@ -526,7 +527,7 @@ create_standardizing_options_lookup <- function(convert_name_case, convert_name_
                                                 list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names,
                                                 impute_sex, impute_sex_type, chosen_sex_file,
                                                 compress_address_whitespace, remove_address_punctuation, convert_address_case, convert_address_to_ascii, extract_postal_code,
-                                                file_output, output_health_and_program_data, chunk_size, debug_mode, max_file_size_output){
+                                                file_output, output_health_and_program_data, chunk_size, debug_mode, max_file_size_output, read_mode){
 
   # NAMES
   #----------------------------------------------------------------------------#
@@ -597,7 +598,7 @@ create_standardizing_options_lookup <- function(convert_name_case, convert_name_
     extract_postal_code <- "no"
   #----------------------------------------------------------------------------#
 
-  # OUTPUT
+  # OUTPUT & FILE READING
   #----------------------------------------------------------------------------#
   # Convert Location Based Fields to ASCII
   if(missing(file_output) || (file_output != "csv" && file_output != "rds"))
@@ -618,6 +619,9 @@ create_standardizing_options_lookup <- function(convert_name_case, convert_name_
   # Convert Location Based Fields to ASCII
   if(missing(max_file_size_output) || (max_file_size_output <= 0))
     max_file_size_output <- "null"
+
+  if(missing(read_mode) || (read_mode != "cmd"))
+    read_mode <- "path"
   #----------------------------------------------------------------------------#
 
   # Construct the flag lookup tables for standardization [Set this to be in a single source file]
@@ -625,15 +629,11 @@ create_standardizing_options_lookup <- function(convert_name_case, convert_name_
     flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names",
                   "impute_sex", "impute_sex_type", "chosen_sex_file",
                   "compress_address_whitespace", "remove_address_punctuation", "convert_address_case", "convert_address_to_ascii", "extract_postal_code",
-                  "file_output",
-                  "output_health_and_program_data",
-                  "chunk_size",
-                  "max_file_size_output",
-                  "debug_mode"),
+                  "file_output","output_health_and_program_data", "chunk_size", "max_file_size_output", "debug_mode", "read_mode"),
     flag_value = c(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace, list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names,
                    impute_sex, impute_sex_type, chosen_sex_file,
                    compress_address_whitespace, remove_address_punctuation, convert_address_case, convert_address_to_ascii, extract_postal_code,
-                   file_output, output_health_and_program_data, chunk_size, max_file_size_output, debug_mode)
+                   file_output, output_health_and_program_data, chunk_size, max_file_size_output, debug_mode, read_mode)
   )
 
   # Create the lookup table
