@@ -560,6 +560,30 @@ create_new_metadata <- function(file_name, output_folder){
                            'VALUES(2, 3, 22);')
   new_entry <- dbSendStatement(my_db, new_entry_query)
   dbClearResult(new_entry)
+
+  #----
+
+  # Insert Statements for Numeric Date Formats
+  #----
+  new_entry_query <- paste('INSERT INTO numeric_date_formats (numeric_date_format_id, numeric_date_format_label, origin_date, units_label)',
+                           'VALUES(1, "SAS/Stata", "1960-01-01", "Days");')
+  new_entry <- dbSendStatement(my_db, new_entry_query)
+  dbClearResult(new_entry)
+
+  new_entry_query <- paste('INSERT INTO numeric_date_formats (numeric_date_format_id, numeric_date_format_label, origin_date, units_label)',
+                           'VALUES(2, "UNIX", "1970-01-01", "Seconds");')
+  new_entry <- dbSendStatement(my_db, new_entry_query)
+  dbClearResult(new_entry)
+
+  new_entry_query <- paste('INSERT INTO numeric_date_formats (numeric_date_format_id, numeric_date_format_label, origin_date, units_label)',
+                           'VALUES(3, "SPSS", "1582-10-14", "Seconds");')
+  new_entry <- dbSendStatement(my_db, new_entry_query)
+  dbClearResult(new_entry)
+
+  new_entry_query <- paste('INSERT INTO numeric_date_formats (numeric_date_format_id, numeric_date_format_label, origin_date, units_label)',
+                           'VALUES(4, "Windows OLE", "1899-12-30", "Days");')
+  new_entry <- dbSendStatement(my_db, new_entry_query)
+  dbClearResult(new_entry)
   #----
 
   # Insert Statements for Starter Compound Formats
