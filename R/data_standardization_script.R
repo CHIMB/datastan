@@ -730,9 +730,9 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             extracted_postal_codes <- return_vars$p_codes
           }
 
-          # Use the standardize_addresses() function along with our look up flags
+          # Use the standardize_locations() function along with our look up flags
           # to standardize the addresses
-          curr_addresses <- standardize_addresses(unprocessed_address, flag_lookup)
+          curr_addresses <- standardize_locations(unprocessed_address, flag_lookup)
 
           if (i == 1) {
             processed_addresses <- curr_addresses
@@ -786,9 +786,9 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             extracted_postal_codes <- return_vars$p_codes
           }
 
-          # Use the standardize_addresses() function along with our look up flags
+          # Use the standardize_locations() function along with our look up flags
           # to standardize the addresses
-          curr_addresses <- standardize_addresses(unprocessed_address, flag_lookup)
+          curr_addresses <- standardize_locations(unprocessed_address, flag_lookup)
 
           if (i == 1) {
             processed_addresses <- curr_addresses
@@ -844,9 +844,9 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             extracted_postal_codes <- return_vars$p_codes
           }
 
-          # Use the standardize_addresses() function along with our look up flags
+          # Use the standardize_locations() function along with our look up flags
           # to standardize the cities
-          curr_cities <- standardize_addresses(unprocessed_cities, flag_lookup)
+          curr_cities <- standardize_locations(unprocessed_cities, flag_lookup)
 
           if (i == 1) {
             processed_city <- curr_cities
@@ -945,9 +945,9 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             extracted_postal_codes <- return_vars$p_codes
           }
 
-          # Use the standardize_addresses() function along with our look up flags
+          # Use the standardize_locations() function along with our look up flags
           # to standardize the countries
-          curr_country <- standardize_addresses(unprocessed_countries, flag_lookup)
+          curr_country <- standardize_locations(unprocessed_countries, flag_lookup)
 
           if (i == 1) {
             processed_countries <- curr_country
@@ -1591,8 +1591,8 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       cat("\n")
     }
 
-    output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
-    if(output_health_and_program_data_value == "yes"){
+    output_non_linkage_fields_value <- flag_lookup_table["output_non_linkage_fields"]
+    if(output_non_linkage_fields_value == "yes"){
       # Create the full path to the output SQLite file within the output folder
       output_sqlite_file2 <- file.path(output_folder, paste0(dataset_code, "_non_linkage_data.sqlite"))
 
@@ -1691,10 +1691,10 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           total_rows_read(rows_read)
 
           # If we are outputting the program and health data, run another function to grab all the data we didn't need to standardize
-          output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
-          if(output_health_and_program_data_value == "yes"){
+          output_non_linkage_fields_value <- flag_lookup_table["output_non_linkage_fields"]
+          if(output_non_linkage_fields_value == "yes"){
             # Call function in "flag_standardizing_script.R" to return a dataset containing the health/program data
-            chunk_read <- compile_health_and_program_data(chunk_read, standardization_rules_metadata_conn, dataset_id)
+            chunk_read <- compile_non_linkage_data(chunk_read, standardization_rules_metadata_conn, dataset_id)
             chunk_read[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(chunk_read) - 1)
             dbWriteTable(clean_db_conn2, "clean_data_table", chunk_read, append = TRUE)
 
@@ -1861,10 +1861,10 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           total_rows_read(rows_read)
 
           # If we are outputting the program and health data, run another function to grab all the data we didn't need to standardize
-          output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
-          if(output_health_and_program_data_value == "yes"){
+          output_non_linkage_fields_value <- flag_lookup_table["output_non_linkage_fields"]
+          if(output_non_linkage_fields_value == "yes"){
             # Call function in "flag_standardizing_script.R" to return a dataset containing the health/program data
-            chunk_read <- compile_health_and_program_data(chunk_read, standardization_rules_metadata_conn, dataset_id)
+            chunk_read <- compile_non_linkage_data(chunk_read, standardization_rules_metadata_conn, dataset_id)
             chunk_read[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(chunk_read) - 1)
             dbWriteTable(clean_db_conn2, "clean_data_table", chunk_read, append = TRUE)
 
@@ -2007,10 +2007,10 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           total_rows_read(rows_read)
 
           # If we are outputting the program and health data, run another function to grab all the data we didn't need to standardize
-          output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
-          if(output_health_and_program_data_value == "yes"){
+          output_non_linkage_fields_value <- flag_lookup_table["output_non_linkage_fields"]
+          if(output_non_linkage_fields_value == "yes"){
             # Call function in "flag_standardizing_script.R" to return a dataset containing the health/program data
-            chunk_read <- compile_health_and_program_data(chunk_read, standardization_rules_metadata_conn, dataset_id)
+            chunk_read <- compile_non_linkage_data(chunk_read, standardization_rules_metadata_conn, dataset_id)
             chunk_read[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(chunk_read) - 1)
             dbWriteTable(clean_db_conn2, "clean_data_table", chunk_read, append = TRUE)
 
@@ -2170,10 +2170,10 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           gc()
 
           # If we are outputting the program and health data, run another function to grab all the data we didn't need to standardize
-          output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
-          if(output_health_and_program_data_value == "yes"){
+          output_non_linkage_fields_value <- flag_lookup_table["output_non_linkage_fields"]
+          if(output_non_linkage_fields_value == "yes"){
             # Call function in "flag_standardizing_script.R" to return a dataset containing the health/program data
-            df <- compile_health_and_program_data(result_df, standardization_rules_metadata_conn, dataset_id)
+            df <- compile_non_linkage_data(result_df, standardization_rules_metadata_conn, dataset_id)
             df[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(clean_dataframe) - 1)
             dbWriteTable(clean_db_conn2, "clean_data_table", df, append = TRUE)
 
@@ -2229,8 +2229,8 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
     }
 
     # Disconnect from the program data database connection if the flag value is "yes"
-    output_health_and_program_data_value <- flag_lookup_table["output_health_and_program_data"]
-    if(output_health_and_program_data_value == "yes"){
+    output_non_linkage_fields_value <- flag_lookup_table["output_non_linkage_fields"]
+    if(output_non_linkage_fields_value == "yes"){
       dbDisconnect(clean_db_conn2)
     }
 
@@ -2256,8 +2256,8 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
   flag_values <- data.frame(
     flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names",
                   "impute_sex", "impute_sex_type", "chosen_sex_file",
-                  "compress_address_whitespace", "remove_address_punctuation", "convert_address_case", "convert_address_to_ascii", "extract_postal_code",
-                  "file_output", "output_health_and_program_data", "chunk_size", "max_file_size_output", "debug_mode", "read_mode"),
+                  "compress_location_whitespace", "remove_location_punctuation", "convert_location_case", "convert_location_to_ascii", "extract_postal_code",
+                  "file_output", "output_non_linkage_fields", "chunk_size", "max_file_size_output", "debug_mode", "read_mode"),
     flag_value = c("original", "no", "no", "no", "no", "no", "no",
                    "no", "none", "null",
                    "no", "no", "original", "no", "no",

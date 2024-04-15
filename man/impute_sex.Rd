@@ -4,14 +4,14 @@
 \alias{impute_sex}
 \title{Impute Sex}
 \usage{
-impute_sex(source_df, processed_names, processed_genders, flag_lookup_table)
+impute_sex(source_df, processed_names, processed_sexes, flag_lookup_table)
 }
 \arguments{
 \item{source_df}{The current processed/cleaned data frame of the input file.}
 
 \item{processed_names}{The current processed primary given names on this chunk iteration or after processing finishes.}
 
-\item{processed_genders}{The current processed genders on this chunk iteration or after processing finishes.}
+\item{processed_sexes}{The current processed sexes on this chunk iteration or after processing finishes.}
 
 \item{flag_lookup_table}{Lookup table used to determine what output file format is to be used. Output format can be of type rdata, csv, xlsx or just sqlite.}
 }

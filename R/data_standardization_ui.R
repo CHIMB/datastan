@@ -129,7 +129,7 @@ data_standardization_ui <- fluidPage(
   fluidRow(
     column(12, div(
       style = "border: 5px solid #ccc; padding: 10px; width: 1000px; background-color: #9c9c9c; font-size: 28px",
-      HTML("<b>Given Names & Surnames Flag Options</b>")), align = "center"
+      HTML("<b>Given Name & Surname Fields Flag Options</b>")), align = "center"
     ),
     column(12, div(
       style = "border: 5px solid #ccc; padding: 10px; width: 1000px; background-color: #Bbbbbb; font-size: 16px",
@@ -150,7 +150,7 @@ data_standardization_ui <- fluidPage(
             selectInput("compress_name_whitespace", label = "Should White Space Between Names Become Compressed?",
                         choices = list("Yes" = "yes",
                                        "No" = "no"),
-                        selected = "Yes", width = validateCssUnit(600)),
+                        selected = "no", width = validateCssUnit(600)),
             bsButton("compress_name_whitespace_help", label = "", icon = icon("question"), style = "info"),
             bsPopover(id = "compress_name_whitespace_help", title = "Compress Name Whitespace - Help",
                       content = paste("Compress Name Whitespace will either remove all white space characters between names <b>(E.g., John Doe --> JohnDoe)</b>.",
@@ -162,11 +162,22 @@ data_standardization_ui <- fluidPage(
             selectInput("remove_name_punctuation", label = "Remove Punctuation From Names?",
                         choices = list("Yes" = "yes",
                                        "No" = "no"),
-                        selected = "Yes", width = validateCssUnit(600)),
+                        selected = "no", width = validateCssUnit(600)),
             bsButton("remove_name_punctuation_help", label = "", icon = icon("question"), style = "info"),
             bsPopover(id = "remove_name_punctuation_help", title = "Compress Name Whitespace - Help",
                       content = paste("Remove Name Punctuation will remove any kind of symbols from a name such as <b>slashes, apostrophes, periods, commas, hyphens",
                                       "etc.</b> Or it will leave them in."),
+                      placement = "right", trigger = "hover",
+                      options = list(container = "body"))
+        ),
+        div(style = "display: flex; justify-content: center; align-items: center;",
+            selectInput("convert_name_to_ascii", label = "Convert Persons Name to ASCII?",
+                        choices = list("Yes" = "yes",
+                                       "No" = "no"),
+                        selected = "no", width = validateCssUnit(600)),
+            bsButton("convert_name_to_ascii_help", label = "", icon = icon("question"), style = "info"),
+            bsPopover(id = "convert_name_to_ascii_help", title = "Convert Name to ASCII - Help",
+                      content = paste("Convert Name to ASCII will remove any accents or diacritics of a persons name, or not if the user chooses <b>NO</b>."),
                       placement = "right", trigger = "hover",
                       options = list(container = "body"))
         ),
@@ -205,78 +216,67 @@ data_standardization_ui <- fluidPage(
                                       "record. Or will not if the option is <b>NO</b>."),
                       placement = "right", trigger = "hover",
                       options = list(container = "body"))
-        ),
-        div(style = "display: flex; justify-content: center; align-items: center;",
-            selectInput("convert_name_to_ascii", label = "Convert Persons Name to ASCII?",
-                        choices = list("Yes" = "yes",
-                                       "No" = "no"),
-                        selected = "Yes", width = validateCssUnit(600)),
-            bsButton("convert_name_to_ascii_help", label = "", icon = icon("question"), style = "info"),
-            bsPopover(id = "convert_name_to_ascii_help", title = "Convert Name to ASCII - Help",
-                      content = paste("Convert Name to ASCII will remove any accents or diacritics of a persons name, or not if the user chooses <b>NO</b>."),
-                      placement = "right", trigger = "hover",
-                      options = list(container = "body"))
-        ),
+        )
       ),
     align = "center"
     ),
   ),
   #----
   HTML("<br><br><br>"),
-  # Address Flag Options
+  # Location Flag Options
   #----
   fluidRow(
     column(12, div(
       style = "border: 5px solid #ccc; padding: 10px; width: 1000px; background-color: #9c9c9c; font-size: 28px",
-      HTML("<b>Address and Locations Flag Options:</b>")), align = "center"
+      HTML("<b>Location Fields Flag Options:</b>")), align = "center"
     ),
     column(12, div(
       style = "border: 5px solid #ccc; padding: 10px; width: 1000px; background-color: #Bbbbbb; font-size: 16px",
       div(style = "display: flex; justify-content: center; align-items: center;",
-          selectInput("convert_address_case", label = "What Case Should Addresses Convert To?",
+          selectInput("convert_location_case", label = "What Case Should Locations Convert To?",
                       choices = list("Upper Case" = "upper",
                                      "Lower Case" = "lower",
                                      "Original Case" = "original"),
                       selected = "original", width = validateCssUnit(600)),
-          bsButton("convert_address_case_help", label = "", icon = icon("question"), style = "info"),
-          bsPopover(id = "convert_address_case_help", title = "Convert Address Case - Help",
-                    content = paste("Convert Address Case will use the input option to either convert all primary or secondary addresses",
+          bsButton("convert_location_case_help", label = "", icon = icon("question"), style = "info"),
+          bsPopover(id = "convert_location_case_help", title = "Convert Location Case - Help",
+                    content = paste("Convert Location Case will use the input option to either convert all location fields",
                                     "in the dataset to <b>Upper Case</b>, <b>Lower Case</b>, or it will keep the <b>Original Case</b> derived from the data."),
                     placement = "right", trigger = "hover",
                     options = list(container = "body"))
       ),
       div(style = "display: flex; justify-content: center; align-items: center;",
-          selectInput("compress_address_whitespace", label = "Should White Space Between Addresses Become Compressed?",
+          selectInput("compress_location_whitespace", label = "Should White Space Between Locations Become Compressed?",
                       choices = list("Yes" = "yes",
                                      "No" = "no"),
-                      selected = "Yes", width = validateCssUnit(600)),
-          bsButton("compress_address_whitespace_help", label = "", icon = icon("question"), style = "info"),
-          bsPopover(id = "compress_address_whitespace_help", title = "Compress Address Whitespace - Help",
-                    content = paste("Compress Address Whitespace will either remove all white space characters between address <b>(E.g., 123 Street -> 123Street)</b>.",
+                      selected = "no", width = validateCssUnit(600)),
+          bsButton("compress_location_whitespace_help", label = "", icon = icon("question"), style = "info"),
+          bsPopover(id = "compress_location_whitespace_help", title = "Compress Location Whitespace - Help",
+                    content = paste("Compress Location Whitespace will either remove all white space characters between locations <b>(E.g., 123 Street -> 123Street)</b>.",
                                     "Or it will leave spaces between addresses in."),
                     placement = "right", trigger = "hover",
                     options = list(container = "body"))
       ),
       div(style = "display: flex; justify-content: center; align-items: center;",
-          selectInput("remove_address_punctuation", label = "Remove Punctuation From Addresses?",
+          selectInput("remove_location_punctuation", label = "Remove Punctuation From Locations?",
                       choices = list("Yes" = "yes",
                                      "No" = "no"),
-                      selected = "Yes", width = validateCssUnit(600)),
-          bsButton("remove_address_punctuation_help", label = "", icon = icon("question"), style = "info"),
-          bsPopover(id = "remove_address_punctuation_help", title = "Compress Address Whitespace - Help",
-                    content = paste("Remove Address Punctuation will remove any kind of symbols from an address such as <b>slashes, apostrophes, periods, commas, hyphens",
+                      selected = "no", width = validateCssUnit(600)),
+          bsButton("remove_location_punctuation_help", label = "", icon = icon("question"), style = "info"),
+          bsPopover(id = "remove_location_punctuation_help", title = "Compress Location Whitespace - Help",
+                    content = paste("Remove Location Punctuation will remove any kind of symbols from a location such as <b>slashes, apostrophes, periods, commas, hyphens",
                                     "etc.</b> Or it will leave them in."),
                     placement = "right", trigger = "hover",
                     options = list(container = "body"))
       ),
       div(style = "display: flex; justify-content: center; align-items: center;",
-          selectInput("convert_address_to_ascii", label = "Convert Addresses to ASCII?",
+          selectInput("convert_location_to_ascii", label = "Convert Locations to ASCII?",
                       choices = list("Yes" = "yes",
                                      "No" = "no"),
-                      selected = "Yes", width = validateCssUnit(600)),
-          bsButton("convert_address_to_ascii_help", label = "", icon = icon("question"), style = "info"),
-          bsPopover(id = "convert_address_to_ascii_help", title = "Convert Address to ASCII - Help",
-                    content = paste("Convert Address to ASCII will remove any accents or diacritics of a persons name, or not if the user chooses <b>NO</b>."),
+                      selected = "no", width = validateCssUnit(600)),
+          bsButton("convert_location_to_ascii_help", label = "", icon = icon("question"), style = "info"),
+          bsPopover(id = "convert_location_to_ascii_help", title = "Convert Location to ASCII - Help",
+                    content = paste("Convert Location to ASCII will remove any accents or diacritics of a location, or not if the user chooses <b>NO</b>."),
                     placement = "right", trigger = "hover",
                     options = list(container = "body"))
       ),
@@ -368,14 +368,14 @@ data_standardization_ui <- fluidPage(
                     options = list(container = "body"))
       ),
       div(style = "display: flex; justify-content: center; align-items: center;",
-          selectInput("output_health_and_program_data", label = "Output Non-linkage Variables in Another File?",
+          selectInput("output_non_linkage_fields", label = "Output Non-linkage Variables in Another File?",
                       choices = list("Yes" = "yes",
                                      "No" = "no"),
                       selected = "no", width = validateCssUnit(600)),
-          bsButton("output_health_and_program_data_help", label = "", icon = icon("question"), style = "info"),
-          bsPopover(id = "output_health_and_program_data_help", title = "Output Health and Program Data - Help",
-                    content = paste("Remove any identifying information from the standardized dataset, keeping only the health and program fields in",
-                                    "addition to some fields such as postal code, birthdate, and gender."),
+          bsButton("output_non_linkage_fields_help", label = "", icon = icon("question"), style = "info"),
+          bsPopover(id = "output_non_linkage_fields_help", title = "Output Non-linkage Fields - Help",
+                    content = paste("Remove any identifying information from the standardized dataset, keeping only the non-linkage fields, in",
+                                    "addition to <b>some</b> linkage fields (postal code, birthdate, and gender)."),
                     placement = "right", trigger = "hover",
                     options = list(container = "body"))
       )
@@ -395,7 +395,7 @@ data_standardization_ui <- fluidPage(
     column(12, div(
       style = "border: 5px solid #ccc; padding: 10px; width: 1000px; background-color: #Bbbbbb; font-size: 16px",
       div(style = "display: flex; justify-content: center; align-items: center;",
-          numericInput("chunking_size", label = "How many rows should be read at a time?", value = NULL, width = validateCssUnit(600)),
+          numericInput("chunking_size", label = "How many rows should be read at a time?", value = 100000, width = validateCssUnit(600)),
           bsButton("chunking_size_help", label = "", icon = icon("question"), style = "info"),
           bsPopover(id = "chunking_size_help", title = "Chunk Size - Help",
                     content = paste("The chunking size is used to determine how many rows to read in at a time when processing data, you may enter",
@@ -568,14 +568,14 @@ data_standardization_server <- function(input, output, session){
     impute_gender_type <- input$impute_gender_type
     chosen_gender_file <- gender_file_path$path
 
-    compress_address_whitespace <- input$compress_address_whitespace
-    remove_address_punctuation <- input$remove_address_punctuation
-    convert_address_case <- input$convert_address_case
-    convert_address_to_ascii <- input$convert_address_to_ascii
+    compress_location_whitespace <- input$compress_location_whitespace
+    remove_location_punctuation <- input$remove_location_punctuation
+    convert_location_case <- input$convert_location_case
+    convert_location_to_ascii <- input$convert_location_to_ascii
     extract_postal_codes <- input$extract_postal_codes
 
     file_output <- input$file_output
-    output_health_and_program_data <- input$output_health_and_program_data
+    output_non_linkage_fields <- input$output_non_linkage_fields
     chunking_size <- input$chunking_size
     read_mode <- input$read_mode
 
@@ -628,12 +628,12 @@ data_standardization_server <- function(input, output, session){
     flag_values <- data.frame(
       flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names",
                     "impute_sex", "impute_sex_type", "chosen_sex_file",
-                    "compress_address_whitespace", "remove_address_punctuation", "convert_address_case", "convert_address_to_ascii", "extract_postal_code",
-                    "file_output", "output_health_and_program_data", "chunk_size", "read_mode"),
+                    "compress_location_whitespace", "remove_location_punctuation", "convert_location_case", "convert_location_to_ascii", "extract_postal_code",
+                    "file_output", "output_non_linkage_fields", "chunk_size", "read_mode"),
       flag_value = c(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace, list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names,
                      impute_gender, impute_gender_type, chosen_gender_file,
-                     compress_address_whitespace, remove_address_punctuation, convert_address_case, convert_address_to_ascii, extract_postal_codes,
-                     file_output,output_health_and_program_data, chunking_size, read_mode)
+                     compress_location_whitespace, remove_location_punctuation, convert_location_case, convert_location_to_ascii, extract_postal_codes,
+                     file_output,output_non_linkage_fields, chunking_size, read_mode)
     )
     #print(flag_values)
     flag_lookup <- setNames(flag_values$flag_value, flag_values$flag_code)

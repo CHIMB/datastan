@@ -1659,7 +1659,6 @@ dataset_ui <- fluidPage(
 
 # Script/Server ----
 dataset_server <- function(input, output, session, metadata_connection){
-  curr_table <- "none"
 
   # Function to execute when the session ends
   onSessionEnded(function() {
@@ -2421,6 +2420,7 @@ dataset_server <- function(input, output, session, metadata_connection){
     rerender_data_tables_manage_datasets()
   })
 
+  # Move to the add record priorities
   observeEvent(input$link_to_add_to_record_priority_fields, {
     # Transition pages by updating the selected page
     updateSelectInput(session, "modification_form", selected = "Manage Database Standardization Rules")
@@ -2432,6 +2432,7 @@ dataset_server <- function(input, output, session, metadata_connection){
     rerender_data_tables_manage_datasets()
   })
 
+  # Move to the update record priorities
   observeEvent(input$link_to_update_record_priority_fields, {
     # Transition pages by updating the selected page
     updateSelectInput(session, "modification_form", selected = "Manage Database Standardization Rules")
@@ -2443,6 +2444,7 @@ dataset_server <- function(input, output, session, metadata_connection){
     rerender_data_tables_manage_datasets()
   })
 
+  # Move to the create new standardizing modules
   observeEvent(input$link_to_create_new_standardizing_module, {
     # Transition pages by updating the selected page
     updateSelectInput(session, "modification_form", selected = "Add Standardizing Module")
@@ -2452,6 +2454,7 @@ dataset_server <- function(input, output, session, metadata_connection){
     rerender_data_tables_manage_datasets()
   })
 
+  # Move to the create new destination fields
   observeEvent(input$link_to_create_new_destination_fields, {
     # Transition pages by updating the selected page
     updateSelectInput(session, "modification_form", selected = "Add Destination Field")
@@ -2533,7 +2536,7 @@ dataset_server <- function(input, output, session, metadata_connection){
   })
   #----
 
-  #----------------------------------CREATE------------------------------------#
+  #--------------------------ADD AND UPDATE DATABASES--------------------------#
 
   # Create new data set
   #----
@@ -2708,11 +2711,17 @@ dataset_server <- function(input, output, session, metadata_connection){
   })
   #----
 
-  #----------------------------------UPDATE------------------------------------#
+  #-------------------------MANAGE STANDARDIZATION RULES-----------------------#
 
   # TO-DO: WHEN WE INSERT A FIELD, ADJUST THE ORDER_ID ACCORDINGLY!!!
   #-- Add to Source Fields --#
   #----
+  output$dataset_to_update <- renderDataTable({
+    df <- dbGetQuery(metadata_connection, paste('SELECT dataset_code, dataset_name FROM datasets'))
+    datatable(df, selection = "single", rownames = FALSE, options = list(lengthChange = FALSE),
+              caption = "Select a Dataset to Add Standardizing Rules To:")
+  })
+
   output$select_standardizing_module <- renderUI({
     # Perform query using metadata_connection
     query_result <- dbGetQuery(metadata_connection, "SELECT standardizing_module_name, standardizing_module_id, description FROM standardizing_modules")
@@ -2802,37 +2811,6 @@ dataset_server <- function(input, output, session, metadata_connection){
               caption = "Select A Numeric Format To Use OR Create A New Format Using The Button")
   })
 
-  output$separator_inputs <- renderUI({
-    # V2
-    #----
-    num_separators <- input$number_of_separators
-
-    separator_inputs_list <- lapply(1:((num_separators * 2) + 1), function(i) {
-      if (i %% 2 == 1) {  # Odd index, create selectInput for destination field
-        # Perform query using metadata_connection
-        query_result <- dbGetQuery(metadata_connection, "SELECT * FROM destination_fields")
-
-        # Extract columns from query result
-        choices <- setNames(query_result$destination_field_id, query_result$destination_field_name)
-
-        # Add the additional look up value where the first choice is 0
-        choices <- c("Not Applicable" = "null", choices)
-        selectInput(inputId = paste0("separator_destination_field_", (i + 1) %/% 2),
-                    label = paste0("Destination Field For Split ", (i + 1) %/% 2, ":"),
-                    choices = choices,
-                    selected = "null")
-      } else {  # Even index, create textInput for separator
-        textInput(inputId = paste0("separator_", (i + 1) %/% 2),
-                  label = paste0("Separator ", (i + 1) %/% 2, ":"),
-                  value = "")
-      }
-    })
-
-    tagList(separator_inputs_list)
-    #----
-
-  })
-
   output$categorical_inputs <- renderUI({
     num_fields <- input$number_of_categorical_fields
 
@@ -2879,12 +2857,6 @@ dataset_server <- function(input, output, session, metadata_connection){
                                       value = NULL), align = "left")
       )
     })
-  })
-
-  output$dataset_to_update <- renderDataTable({
-    df <- dbGetQuery(metadata_connection, paste('SELECT dataset_code, dataset_name FROM datasets'))
-    datatable(df, selection = "single", rownames = FALSE, options = list(lengthChange = FALSE),
-              caption = "Select a Dataset to Add Standardizing Rules To:")
   })
 
   # This observe function will look for what row the user selects to add a new
@@ -2950,115 +2922,33 @@ dataset_server <- function(input, output, session, metadata_connection){
       compound_format_id <- df[compound_field_selected_row, "compound_field_format_id"]
 
       if(is.na(compound_format_id)){
-        num_separators     <- input$number_of_separators
-        format_description <- input$new_compound_format_description
-        format             <- input$new_compound_format
-        separators <- c()
-        # indexes <- c()
-        destination_field_ids <- c()
-        for(i in seq_len(num_separators + 1)){
-          if(i <= num_separators){
-            separator_input_id <- paste0("separator_", i)
-            separator_value <- input[[separator_input_id]]
-            separators <- c(separators, separator_value)
-          }
-
-          destination_field_input_id <- paste0("separator_destination_field_", i)
-          destination_field_value <- input[[destination_field_input_id]]
-          if(destination_field_value == "null"){
-            destination_field_value <- NA
-          }
-          destination_field_ids <- c(destination_field_ids, destination_field_value)
-        }
-
-        # Error handling
-        #----#
-        for(i in seq_along(separators)){
-          if(separators[i] == ""){
-            showNotification("Failed to Add Source Field - Some Compound Format Inputs are Missing", type = "error", closeButton = FALSE)
-            return()
-          }
-        }
-        #----#
-
-        # Create a query for inserting a new compound format into compound_field_formats
-        new_entry_query <- paste("INSERT INTO compound_field_formats (compound_format, format_description)",
-                                 "VALUES(?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
-        dbBind(new_entry, list(format, format_description))
-        dbClearResult(new_entry)
-
-        # Get the most recently inserted compound_field_format_id value
-        compound_field_format_id <- dbGetQuery(metadata_connection, "SELECT last_insert_rowid() AS compound_field_format_id;")$compound_field_format_id
-
-        # Loop for adding the separators into the metadata
-        for(i in seq_along(separators)){
-          # Create a query for inserting a new compound separator entry into compound_field_separators
-          new_entry_query <- paste("INSERT INTO compound_field_separators (compound_field_format_id, separator_order, separator, substring_index)",
-                                   "VALUES(?, ?, ?, ?);")
-          new_entry <- dbSendQuery(metadata_connection, new_entry_query)
-          dbBind(new_entry, list(compound_field_format_id, i, separators[i], NA)) #NA for now, change it later!
-          dbClearResult(new_entry)
-        }
-
-        # Loop for adding the compound field destinations into the metadata
-        for(i in seq_along(destination_field_ids)){
-
-          # Create a query for inserting a new compound separator entry into compound_field_destinations
-          new_entry_query <- paste("INSERT INTO compound_field_destinations (compound_field_format_id, destination_mapping_order, destination_field_id)",
-                                   "VALUES(?, ?, ?);")
-          new_entry <- dbSendQuery(metadata_connection, new_entry_query)
-          dbBind(new_entry, list(compound_field_format_id, i, destination_field_ids[i]))
-          dbClearResult(new_entry)
-        }
-
-        # Increment the field_order of existing entries where field_order >= new_field_order
-        update_query <- paste("UPDATE source_fields SET field_order = field_order + 1 where field_order >= ? and dataset_id = ?")
-        update_statement <- dbSendQuery(metadata_connection, update_query)
-        dbBind(update_statement, list(field_order, dataset_id))
-        dbClearResult(update_statement)
-
-        # Create a query for inserting a new source field into source_fields
-        new_entry_query <- paste("INSERT INTO source_fields (dataset_id, source_field_name, field_order, fixed_width_length, standardizing_module_id)",
-                                 "VALUES(?, ?, ?, ?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
-        dbBind(new_entry, list(dataset_id, source_field_name, field_order, fixed_width_length, standardizing_module))
-        dbClearResult(new_entry)
-
-        # Get the most recently inserted source_field_id value
-        source_field_id <- dbGetQuery(metadata_connection, "SELECT last_insert_rowid() AS source_field_id;")$source_field_id
-
-        # Finally, create a query for inserting a new compound field into compound_fields
-        new_entry_query <- paste("INSERT INTO compound_fields (source_field_id, compound_field_format_id)",
-                                 "VALUES(?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
-        dbBind(new_entry, list(source_field_id, compound_field_format_id))
-        dbClearResult(new_entry)
+        showNotification("Failed to Add Source Field - Invalid Compound Field Format", type = "error", closeButton = FALSE)
+        return()
       }
-      else{
-        # Increment the field_order of existing entries where field_order >= new_field_order
-        update_query <- paste("UPDATE source_fields SET field_order = field_order + 1 where field_order >= ? and dataset_id = ?")
-        update_statement <- dbSendQuery(metadata_connection, update_query)
-        dbBind(update_statement, list(field_order, dataset_id))
-        dbClearResult(update_statement)
 
-        # Create a query for inserting a new source field into source_fields
-        new_entry_query <- paste("INSERT INTO source_fields (dataset_id, source_field_name, field_order, fixed_width_length, standardizing_module_id)",
-                                 "VALUES(?, ?, ?, ?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
-        dbBind(new_entry, list(dataset_id, source_field_name, field_order, fixed_width_length, standardizing_module))
-        dbClearResult(new_entry)
+      # Increment the field_order of existing entries where field_order >= new_field_order
+      update_query <- paste("UPDATE source_fields SET field_order = field_order + 1 where field_order >= ? and dataset_id = ?")
+      update_statement <- dbSendQuery(metadata_connection, update_query)
+      dbBind(update_statement, list(field_order, dataset_id))
+      dbClearResult(update_statement)
 
-        # Get the most recently inserted source_field_id value
-        source_field_id <- dbGetQuery(metadata_connection, "SELECT last_insert_rowid() AS source_field_id;")$source_field_id
+      # Create a query for inserting a new source field into source_fields
+      new_entry_query <- paste("INSERT INTO source_fields (dataset_id, source_field_name, field_order, fixed_width_length, standardizing_module_id)",
+                               "VALUES(?, ?, ?, ?, ?);")
+      new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+      dbBind(new_entry, list(dataset_id, source_field_name, field_order, fixed_width_length, standardizing_module))
+      dbClearResult(new_entry)
 
-        # Create a query for inserting a new compound field into compound_fields
-        new_entry_query <- paste("INSERT INTO compound_fields (source_field_id, compound_field_format_id)",
-                                 "VALUES(?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
-        dbBind(new_entry, list(source_field_id, compound_format_id))
-        dbClearResult(new_entry)
-      }
+      # Get the most recently inserted source_field_id value
+      source_field_id <- dbGetQuery(metadata_connection, "SELECT last_insert_rowid() AS source_field_id;")$source_field_id
+
+      # Create a query for inserting a new compound field into compound_fields
+      new_entry_query <- paste("INSERT INTO compound_fields (source_field_id, compound_field_format_id)",
+                               "VALUES(?, ?);")
+      new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+      dbBind(new_entry, list(source_field_id, compound_format_id))
+      dbClearResult(new_entry)
+
     }
     else if (!is.null(standardizing_module) && standardizing_module_type == 3){
       num_categorical_fields <- input$number_of_categorical_fields
@@ -3516,30 +3406,6 @@ dataset_server <- function(input, output, session, metadata_connection){
     reset_add_dataset_widgets()
 
     showNotification("Compound Format Successfully Added", type = "message", closeButton = FALSE)
-  })
-
-  observeEvent(input$see_separator_example, {
-    showModal(modalDialog(
-      title = "Separator Example",
-      tags$div(
-        style = "max-height: 80vh; overflow-y: auto;",
-        tags$img(src='separator_example.png', width = "100%")
-      ),
-      easyClose = TRUE,
-      footer = NULL
-    ))
-  })
-
-  observeEvent(input$see_index_example, {
-    showModal(modalDialog(
-      title = "Index Example",
-      tags$div(
-        style = "max-height: 80vh; overflow-y: auto;",
-        tags$img(src='index_example.png', width = "100%")
-      ),
-      easyClose = TRUE,
-      footer = NULL
-    ))
   })
   #----
 
@@ -4613,26 +4479,6 @@ dataset_server <- function(input, output, session, metadata_connection){
 
   })
 
-  # This observe is meant to deal with manual field order entries, so that they can't
-  # go over the max value
-  observe({
-    field_order_update <- input$updated_field_order
-    field_order_create <- input$new_field_order
-    selected_row_update <- input$source_field_to_update_datasets_rows_selected
-    selected_row_create <- input$dataset_to_update_rows_selected
-
-    if(!is.null(field_order_update) && !is.na(field_order_update) && !is.null(selected_row_update)){
-      df <- dbGetQuery(metadata_connection, paste('SELECT * FROM datasets'))
-      selected_dataset_id <- df[selected_row_update, "dataset_id"]
-      df <- dbGetQuery(metadata_connection, paste('SELECT * FROM source_fields WHERE dataset_id =', selected_dataset_id))
-    }
-    if(!is.null(field_order_create) && !is.na(field_order_create) && !is.null(selected_row_create)){
-      df <- dbGetQuery(metadata_connection, paste('SELECT * FROM datasets'))
-      selected_dataset_id <- df[selected_row_create, "dataset_id"]
-      df <- dbGetQuery(metadata_connection, paste('SELECT * FROM source_fields WHERE dataset_id =', selected_dataset_id))
-    }
-  })
-
   # User wants to create a new compound format when updating a source field
   observeEvent(input$add_compound_format_for_updated_sf, {
     updateSelectInput(session, "update_type", selected = 1)
@@ -5005,32 +4851,7 @@ dataset_server <- function(input, output, session, metadata_connection){
 
     showNotification("Compound Format Successfully Updated", type = "message", closeButton = FALSE)
   })
-
-  observeEvent(input$see_separator_example_2, {
-    showModal(modalDialog(
-      title = "Separator Example",
-      tags$div(
-        style = "max-height: 80vh; overflow-y: auto;",
-        tags$img(src='separator_example.png', width = "100%")
-      ),
-      easyClose = TRUE,
-      footer = NULL
-    ))
-  })
-
-  observeEvent(input$see_index_example_2, {
-    showModal(modalDialog(
-      title = "Index Example",
-      tags$div(
-        style = "max-height: 80vh; overflow-y: auto;",
-        tags$img(src='index_example.png', width = "100%")
-      ),
-      easyClose = TRUE,
-      footer = NULL
-    ))
-  })
   #----
-
 
   #-- Update Categorical Fields --#
   #----
@@ -5189,6 +5010,7 @@ dataset_server <- function(input, output, session, metadata_connection){
   #-- Update Numeric Format --#
   #----
   numeric_date_format_id_to_update <- 0
+
   output$updatable_numeric_formats <- renderDataTable({
     query <- paste('SELECT ndf.numeric_date_format_id, numeric_date_format_label, origin_date, units_label, count(source_field_id) as Number_Of_Usages FROM numeric_date_formats ndf',
                    'LEFT JOIN numeric_date_fields ndf2 on ndf2.numeric_date_format_id = ndf.numeric_date_format_id',

@@ -15,16 +15,17 @@ create_standardizing_options_lookup(
   impute_sex,
   impute_sex_type,
   chosen_sex_file,
-  compress_address_whitespace,
-  remove_address_punctuation,
-  convert_address_case,
-  convert_address_to_ascii,
+  compress_location_whitespace,
+  remove_location_punctuation,
+  convert_location_case,
+  convert_location_to_ascii,
   extract_postal_code,
   file_output,
-  output_health_and_program_data,
+  output_non_linkage_fields,
   chunk_size,
   debug_mode,
-  max_file_size_output
+  max_file_size_output,
+  read_mode
 )
 }
 \arguments{
@@ -48,25 +49,27 @@ create_standardizing_options_lookup(
 
 \item{chosen_sex_file}{If the custom type is chosen, supply an input file.}
 
-\item{compress_address_whitespace}{Replace location based fields white space with an empty string symbol. (Options: "yes", "no")}
+\item{compress_location_whitespace}{Replace location based fields white space with an empty string symbol. (Options: "yes", "no")}
 
-\item{remove_address_punctuation}{Remove any symbols or punctuation from location based fields. (Options: "yes", "no")}
+\item{remove_location_punctuation}{Remove any symbols or punctuation from location based fields. (Options: "yes", "no")}
 
-\item{convert_address_case}{Convert the capitalization of a location based field. (Options: "upper", "lower", "default")}
+\item{convert_location_case}{Convert the capitalization of a location based field. (Options: "upper", "lower", "default")}
 
-\item{convert_address_to_ascii}{Remove diacritics of a location based field. (Options: "yes", "no")}
+\item{convert_location_to_ascii}{Remove diacritics of a location based field. (Options: "yes", "no")}
 
 \item{extract_postal_code}{Attempt to extract postal codes from location based fields and place an additional column. (Options: "yes", "no")}
 
 \item{file_output}{What file output format is desired. (Options: "csv", "rds", "sqlite")}
 
-\item{output_health_and_program_data}{Output non-linkage fields in a separate file? (Options: "yes", "no")}
+\item{output_non_linkage_fields}{Output non-linkage fields in a separate file? (Options: "yes", "no")}
 
 \item{chunk_size}{How many rows should be read at a time when reading the source file in chunks? (Options: 10000-1000000)}
 
 \item{debug_mode}{Print additional information to the console in case of potential bugs? (Options: "on", "off")}
 
 \item{max_file_size_output}{What is the max file size that a data frame can be before it isn't returned? (Options: integer in Mega-bytes)}
+
+\item{read_mode}{Read delimited data using the base file path, or using shell commands? (Options: "path", "cmd")}
 }
 \value{
 A lookup table consisting of chosen flags and the assigned default options for bad inputs or undefined choices.

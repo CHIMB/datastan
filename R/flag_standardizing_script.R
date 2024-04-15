@@ -51,39 +51,39 @@ standardize_names <- function(input_names, flag_lookup_table){
 #' @param flag_lookup_table A lookup table containing manually set or default values that will determine how persons addresses are handled specifically by the function.
 #' @return A vector of processed address/location based values.
 #' @examples
-#' processed_locations <- standardize_addresses(c("123 Fake St", "canada", "winniPEG"), flag_lookup)
+#' processed_locations <- standardize_locations(c("123 Fake St", "canada", "winniPEG"), flag_lookup)
 #' @export
-standardize_addresses <- function(input_addresses, flag_lookup_table){
-  curr_addresses <- input_addresses
+standardize_locations <- function(input_locations, flag_lookup_table){
+  curr_locations <- input_locations
 
   #-- First - Remove any punctuation: --#
-  compress_address_whitespace_value <- flag_lookup_table["remove_address_punctuation"]
-  if(compress_address_whitespace_value == "yes"){
-    curr_addresses <- stri_replace_all_regex(curr_addresses, "[-.'[:punct:]]+", " ")
+  remove_location_punctuation_value <- flag_lookup_table["remove_location_punctuation"]
+  if(remove_location_punctuation_value == "yes"){
+    curr_locations <- stri_replace_all_regex(curr_locations, "[-.'[:punct:]]+", " ")
   }
 
   #-- Second - Remove any white space: --#
-  compress_address_whitespace_value <- flag_lookup_table["compress_address_whitespace"]
-  if(compress_address_whitespace_value == "yes"){
-    curr_addresses <- stri_replace_all_regex(curr_addresses, " ", "")
+  compress_location_whitespace_value <- flag_lookup_table["compress_location_whitespace"]
+  if(compress_location_whitespace_value == "yes"){
+    curr_locations <- stri_replace_all_regex(curr_locations, " ", "")
   }
 
   #-- Third - Remove accents or diacritics from names: --#
-  convert_to_ascii_value <- flag_lookup_table["convert_address_to_ascii"]
+  convert_to_ascii_value <- flag_lookup_table["convert_location_to_ascii"]
   if(convert_to_ascii_value == "yes"){
-    curr_addresses <- stri_trans_general(curr_addresses, "Latin-ASCII")
+    curr_locations <- stri_trans_general(curr_locations, "Latin-ASCII")
   }
 
   #-- Fourth - Convert name case using flag value --#
-  convert_case_value <- flag_lookup_table["convert_address_case"]
+  convert_case_value <- flag_lookup_table["convert_location_case"]
   if(convert_case_value == "upper"){
-    curr_addresses <- stri_trans_toupper(curr_addresses)
+    curr_locations <- stri_trans_toupper(curr_locations)
   }
   else if (convert_case_value == "lower"){
-    curr_addresses <- stri_trans_tolower(curr_addresses)
+    curr_locations <- stri_trans_tolower(curr_locations)
   }
 
-  return(curr_addresses)
+  return(curr_locations)
 }
 
 #' Split Compound Field
@@ -474,9 +474,9 @@ concat_postal_codes <- function(df, alt_postal_codes){
 #' @param dataset_id The dataset_id of the dataset we’re currently cleaning.
 #' @return A processed data frame containing the non-linkage fields in their original format.
 #' @examples
-#' non_linkage_df <- compile_health_and_program_data(source_df, db, 1)
+#' non_linkage_df <- compile_non_linkage_data(source_df, db, 1)
 #' @export
-compile_health_and_program_data <- function(source_data_frame, db_conn, dataset_id){
+compile_non_linkage_data <- function(source_data_frame, db_conn, dataset_id){
 
   # Query to get the fields from the chosen dataset, that we DO standardize that is NOT IDENTIFIABLE
   standardized_data_query <- paste("SELECT distinct source_field_name, field_order",
@@ -508,13 +508,13 @@ compile_health_and_program_data <- function(source_data_frame, db_conn, dataset_
 #' @param impute_sex Impute missing values in sex fields. (Options: "yes", "no")
 #' @param impute_sex_type How should the sex imputation take place? (Options: "custom" - Must be a .csv file with two columns [primary_given_name] & [sex], "internal" - Use sex values from the source data set)
 #' @param chosen_sex_file If the custom type is chosen, supply an input file.
-#' @param compress_address_whitespace Replace location based fields white space with an empty string symbol. (Options: "yes", "no")
-#' @param remove_address_punctuation Remove any symbols or punctuation from location based fields. (Options: "yes", "no")
-#' @param convert_address_case Convert the capitalization of a location based field. (Options: "upper", "lower", "default")
-#' @param convert_address_to_ascii Remove diacritics of a location based field. (Options: "yes", "no")
+#' @param compress_location_whitespace Replace location based fields white space with an empty string symbol. (Options: "yes", "no")
+#' @param remove_location_punctuation Remove any symbols or punctuation from location based fields. (Options: "yes", "no")
+#' @param convert_location_case Convert the capitalization of a location based field. (Options: "upper", "lower", "default")
+#' @param convert_location_to_ascii Remove diacritics of a location based field. (Options: "yes", "no")
 #' @param extract_postal_code Attempt to extract postal codes from location based fields and place an additional column. (Options: "yes", "no")
 #' @param file_output What file output format is desired. (Options: "csv", "rds", "sqlite")
-#' @param output_health_and_program_data Output non-linkage fields in a separate file? (Options: "yes", "no")
+#' @param output_non_linkage_fields Output non-linkage fields in a separate file? (Options: "yes", "no")
 #' @param chunk_size How many rows should be read at a time when reading the source file in chunks? (Options: 10000-1000000)
 #' @param debug_mode Print additional information to the console in case of potential bugs? (Options: "on", "off")
 #' @param max_file_size_output What is the max file size that a data frame can be before it isn't returned? (Options: integer in Mega-bytes)
@@ -526,8 +526,8 @@ compile_health_and_program_data <- function(source_data_frame, db_conn, dataset_
 create_standardizing_options_lookup <- function(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace,
                                                 list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names,
                                                 impute_sex, impute_sex_type, chosen_sex_file,
-                                                compress_address_whitespace, remove_address_punctuation, convert_address_case, convert_address_to_ascii, extract_postal_code,
-                                                file_output, output_health_and_program_data, chunk_size, debug_mode, max_file_size_output, read_mode){
+                                                compress_location_whitespace, remove_location_punctuation, convert_location_case, convert_location_to_ascii, extract_postal_code,
+                                                file_output, output_non_linkage_fields, chunk_size, debug_mode, max_file_size_output, read_mode){
 
   # NAMES
   #----------------------------------------------------------------------------#
@@ -578,20 +578,20 @@ create_standardizing_options_lookup <- function(convert_name_case, convert_name_
   # LOCATIONS
   #----------------------------------------------------------------------------#
   # Compress Location Based Fields White space
-  if(missing(compress_address_whitespace) || (compress_address_whitespace != "yes" && compress_address_whitespace != "no"))
-    compress_address_whitespace <- "no"
+  if(missing(compress_location_whitespace) || (compress_location_whitespace != "yes" && compress_location_whitespace != "no"))
+    compress_location_whitespace <- "no"
 
   # Remove Location Based Fields Punctuation
-  if(missing(remove_address_punctuation) || (remove_address_punctuation != "yes" && remove_address_punctuation != "no"))
-    remove_address_punctuation <- "no"
+  if(missing(remove_location_punctuation) || (remove_location_punctuation != "yes" && remove_location_punctuation != "no"))
+    remove_location_punctuation <- "no"
 
   # Convert Location Based Fields Case
-  if(missing(convert_address_case) || (convert_address_case != "upper" && convert_address_case != "lower"))
-    convert_address_case <- "default"
+  if(missing(convert_location_case) || (convert_location_case != "upper" && convert_location_case != "lower"))
+    convert_location_case <- "default"
 
   # Convert Location Based Fields to ASCII
-  if(missing(convert_address_to_ascii) || (convert_address_to_ascii != "yes" && convert_address_to_ascii != "no"))
-    convert_address_to_ascii <- "no"
+  if(missing(convert_location_to_ascii) || (convert_location_to_ascii != "yes" && convert_location_to_ascii != "no"))
+    convert_location_to_ascii <- "no"
 
   # Convert Location Based Fields to ASCII
   if(missing(extract_postal_code) || (extract_postal_code != "yes" && extract_postal_code != "no"))
@@ -605,8 +605,8 @@ create_standardizing_options_lookup <- function(convert_name_case, convert_name_
     file_output <- "sqlite"
 
   # Convert Location Based Fields to ASCII
-  if(missing(output_health_and_program_data) || (output_health_and_program_data != "yes" && output_health_and_program_data != "no"))
-    output_health_and_program_data <- "no"
+  if(missing(output_non_linkage_fields) || (output_non_linkage_fields != "yes" && output_non_linkage_fields != "no"))
+    output_non_linkage_fields <- "no"
 
   # Convert Location Based Fields to ASCII
   if(missing(chunk_size) || (chunk_size < 10000 || chunk_size > 1000000))
@@ -628,12 +628,12 @@ create_standardizing_options_lookup <- function(convert_name_case, convert_name_
   flag_values <- data.frame(
     flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names",
                   "impute_sex", "impute_sex_type", "chosen_sex_file",
-                  "compress_address_whitespace", "remove_address_punctuation", "convert_address_case", "convert_address_to_ascii", "extract_postal_code",
-                  "file_output","output_health_and_program_data", "chunk_size", "max_file_size_output", "debug_mode", "read_mode"),
+                  "compress_location_whitespace", "remove_location_punctuation", "convert_location_case", "convert_location_to_ascii", "extract_postal_code",
+                  "file_output","output_non_linkage_fields", "chunk_size", "max_file_size_output", "debug_mode", "read_mode"),
     flag_value = c(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace, list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names,
                    impute_sex, impute_sex_type, chosen_sex_file,
-                   compress_address_whitespace, remove_address_punctuation, convert_address_case, convert_address_to_ascii, extract_postal_code,
-                   file_output, output_health_and_program_data, chunk_size, max_file_size_output, debug_mode, read_mode)
+                   compress_location_whitespace, remove_location_punctuation, convert_location_case, convert_location_to_ascii, extract_postal_code,
+                   file_output, output_non_linkage_fields, chunk_size, max_file_size_output, debug_mode, read_mode)
   )
 
   # Create the lookup table
