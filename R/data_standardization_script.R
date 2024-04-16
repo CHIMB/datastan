@@ -1656,7 +1656,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
               chunk_read <- fread(cmd = read_cmd, colClasses = "character", fill = TRUE, data.table = TRUE)
             }
             else{
-              chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, skip = rows_read + 1, fill = TRUE, data.table = TRUE)
+              chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, skip = rows_read + 1, data.table = TRUE) #Removed fill = TRUE
             }
 
             rows_read <- 1
@@ -1667,7 +1667,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
               chunk_read <- fread(cmd = read_cmd, header = FALSE, colClasses = "character", fill = TRUE, data.table = TRUE, sep = "\t")
             }
             else{
-              chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, skip = rows_read, fill = TRUE, data.table = TRUE)
+              chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, skip = rows_read, data.table = TRUE) #Removed fill = TRUE
             }
           }
           # Call garbage collector
