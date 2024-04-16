@@ -1649,7 +1649,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
           # Skip the header if it's not the first iteration, use "select = " to get only the columns we need
           if (rows_read == 0 && dataset_requires_header == 1) {
-            header_columns <- as.character(fread(input = file_path, header = FALSE, nrow = 1, fill = TRUE))
+            header_columns <- as.character(fread(input = file_path, header = FALSE, nrow = 1)) #Removed fill = TRUE
 
             if(read_mode == "cmd"){
               read_cmd <- paste0("tail -n +1 ", file_path, " | head -n ", chunk_size+1)
@@ -1819,7 +1819,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
           # Skip the header if it's not the first iteration
           if (rows_read == 0 && dataset_requires_header == 1) {
-            header_columns <- as.character(fread(input = file_path, header = FALSE, nrow = 1, fill = TRUE))
+            header_columns <- as.character(fread(input = file_path, header = FALSE, nrow = 1)) #Removed fill = TRUE
 
             if(read_mode == "cmd"){
               read_cmd <- paste0("tail -n +1 ", file_path, " | head -n ", chunk_size+1)
