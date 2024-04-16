@@ -1653,7 +1653,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
             if(read_mode == "cmd"){
               read_cmd <- paste0("tail -n +1 ", file_path, " | head -n ", chunk_size+1)
-              chunk_read <- fread(cmd = read_cmd, colClasses = "character", fill = TRUE, data.table = TRUE)
+              chunk_read <- fread(cmd = read_cmd, colClasses = "character", data.table = TRUE) #Removed fill = TRUE
             }
             else{
               chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, skip = rows_read + 1, data.table = TRUE) #Removed fill = TRUE
@@ -1664,7 +1664,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           else{
             if(read_mode == "cmd"){
               read_cmd <- paste0("head -n ", rows_read + chunk_size, " ", file_path, " | tail -", chunk_size)
-              chunk_read <- fread(cmd = read_cmd, header = FALSE, colClasses = "character", fill = TRUE, data.table = TRUE, sep = "\t")
+              chunk_read <- fread(cmd = read_cmd, header = FALSE, colClasses = "character", data.table = TRUE, sep = "\t") #Removed fill = TRUE
             }
             else{
               chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, skip = rows_read, data.table = TRUE) #Removed fill = TRUE
