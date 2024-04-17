@@ -1838,6 +1838,9 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
               chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read + 1, data.table = TRUE)
             }
             rows_read <- 1
+
+            if(read_mode == "cmd")
+              chunks_read <- 1
           }
           else{
             if(read_mode == "cmd"){
