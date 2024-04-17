@@ -1817,6 +1817,9 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
         # Extract the line count from the output
         line_count <- as.numeric(strsplit(line_count_output, "\\s+")[[1]][1])
+
+        # Create a variable counting the number of chunks read
+        chunks_read <- 0
       }
 
       tryCatch({
@@ -1829,7 +1832,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
             if(read_mode == "cmd"){
               read_cmd <- paste0("tail -n +1 ", file_path, " | head -n ", chunk_size+1)
-              chunk_read <- fread(cmd = read_cmd, colClasses = "character", fill = TRUE, data.table = TRUE)
+              chunk_read <- fread(cmd = read_cmd, colClasses = "character", data.table = TRUE) # Removed fill = TRUE
             }
             else{
               chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read + 1, data.table = TRUE)
@@ -1838,8 +1841,8 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           }
           else{
             if(read_mode == "cmd"){
-              read_cmd <- paste0("head -n ", rows_read + chunk_size, " ", file_path, " | tail -", chunk_size)
-              chunk_read <- fread(cmd = read_cmd, header = FALSE, colClasses = "character", fill = TRUE, data.table = TRUE, sep = ",")
+              read_cmd <- paste0("head -n ", chunks_read + chunk_size, " ", file_path, " | tail -", chunk_size)
+              chunk_read <- fread(cmd = read_cmd, header = FALSE, colClasses = "character", data.table = TRUE, sep = ",") # Removed fill = TRUE
             }
             else{
               chunk_read <- fread(input = file_path, header = FALSE, nrow = chunk_size, colClasses = "character", skip = rows_read, data.table = TRUE)
@@ -1932,8 +1935,15 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
           # If the size of the read chunk is less than our chunk size, break out of the loop
           if(rows_read_chunk < chunk_size){
-            print(paste0("Breaking: ", rows_read_chunk, " < ", chunk_size))
-            break
+            if(read_mode != "cmd"){
+              print(paste0("Breaking: ", rows_read_chunk, " < ", chunk_size))
+              break
+            }
+          }
+
+          # Modify how many chunks have been read
+          if(read_mode == "cmd"){
+            chunks_read <- chunks_read + chunk_size
           }
 
           if(read_mode == "cmd" && rows_read >= line_count){
