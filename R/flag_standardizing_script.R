@@ -186,46 +186,84 @@ list_curr_surnames <- function(names_to_append, df){
 #' @examples
 #' df <- impute_sex(df, c("John", "Jane", "Cole", "John"), c("M", "F", "C", NA), flag_lookup)
 #' @export
-impute_sex <- function(source_df, processed_names, processed_sexes, flag_lookup_table){ # Change wordings a descriptions to inferring sex
+impute_sex <- function(source_df, processed_names, processed_sexes, flag_lookup_table){
   # Get what imputation type we are doing
   imputation_type <- flag_lookup_table["impute_sex_type"]
 
   if(imputation_type == "default"){
-    # return(source_df) #THE GENDER PACKAGE WONT INSTALL ON SOME COMPUTERS SO KEEP IT OUT FOR NOW
+    # Create a data.frame based on results from the gender package
+    sex_results <- gender(unique(tolower(processed_names)))
+    sex_summary <- data.frame(
+      primary_given_name = sex_results$name,
+      sex = sex_results$gender
+    )
 
-    if(is.null(processed_sexes))
-      temporary_sex_imputation_df <- data.frame(names = processed_names, sex = NA)
-    else
-      temporary_sex_imputation_df <- data.frame(names = processed_names, sex = processed_sexes)
+    # Remove sex_results and call garbage collector
+    rm(sex_results)
+    gc()
 
-    names_to_impute <- temporary_sex_imputation_df[is.na(temporary_sex_imputation_df$sex), ]$names
+    # Replace male and female with M and F
+    sex_summary$sex <- str_replace_all(sex_summary$sex, "female", "F")
+    sex_summary$sex <- str_replace_all(sex_summary$sex, "male", "M")
 
-    # Sample data
-    df0 <- data.frame(v1 = names_to_impute, stringsAsFactors = FALSE)
+    # Filter out names with NA genders
+    na_indices <- which(is.na(processed_sexes) | processed_sexes == "NA" | processed_sexes == "")
 
-    # Add an index column
-    df0$index <- seq_len(nrow(df0))
+    processed_names_na <- processed_names[na_indices]
 
-    # Rename column in df0
-    colnames(df0) <- c("name", "index")
+    # Step 1: Find the indices where the names exist in the first names list
+    indicies_list <- match(tolower(processed_names_na), tolower(sex_summary$primary_given_name))
 
-    # Merge
-    df1 <- merge(df0, gender(unique(df0$name)), by = "name", all.x = TRUE)
+    # Step 2: Get the majority sex for each name
+    majority_sex <- sex_summary[indicies_list, "sex"]
 
-    # Sort by index
-    df1 <- df1[order(df1$index), ]
+    # Step 3: Un-list the sexes
+    processed_sexes[na_indices] <- unlist(majority_sex)
 
-    # Remove the index column if needed
-    df1 <- df1[, -which(names(df1) == "index")]
-
-    temporary_sex_imputation_df$sex[is.na(temporary_sex_imputation_df$sex)] <- df1$gender
-    temporary_sex_imputation_df$sex <- str_replace_all(temporary_sex_imputation_df$sex, "female", "F")
-    temporary_sex_imputation_df$sex <- str_replace_all(temporary_sex_imputation_df$sex, "male", "M")
-
-    source_df[["imputed_sex"]] <- paste(source_df[["imputed_sex"]], temporary_sex_imputation_df$sex, sep = " ")
-    source_df[is.na(source_df)] <- ""
+    # Step 4: Add the imputed sex to a new column
+    source_df[["imputed_sex"]] <- paste(processed_sexes)
     source_df[["imputed_sex"]] <- trimws(source_df[["imputed_sex"]])
+
+    # Remove the sex summary data frame
+    rm(sex_summary)
+    gc()
+
     return(source_df)
+
+    # if(is.null(processed_sexes))
+    #   temporary_sex_imputation_df <- data.frame(names = processed_names, sex = NA)
+    # else
+    #   temporary_sex_imputation_df <- data.frame(names = processed_names, sex = processed_sexes)
+    #
+    # names_to_impute <- temporary_sex_imputation_df[is.na(temporary_sex_imputation_df$sex), ]$names
+    #
+    # # Sample data
+    # df0 <- data.frame(v1 = names_to_impute, stringsAsFactors = FALSE)
+    #
+    # # Add an index column
+    # df0$index <- seq_len(nrow(df0))
+    #
+    # # Rename column in df0
+    # colnames(df0) <- c("name", "index")
+    #
+    # # Merge
+    # df1 <- merge(df0, gender(unique(df0$name)), by = "name", all.x = TRUE)
+    #
+    # # Sort by index
+    # df1 <- df1[order(df1$index), ]
+    #
+    # # Remove the index column if needed
+    # df1 <- df1[, -which(names(df1) == "index")]
+    #
+    # temporary_sex_imputation_df$sex[is.na(temporary_sex_imputation_df$sex)] <- df1$gender
+    # temporary_sex_imputation_df$sex <- str_replace_all(temporary_sex_imputation_df$sex, "female", "F")
+    # temporary_sex_imputation_df$sex <- str_replace_all(temporary_sex_imputation_df$sex, "male", "M")
+    #
+    # source_df[["imputed_sex"]] <- paste(source_df[["imputed_sex"]], temporary_sex_imputation_df$sex, sep = " ")
+    # source_df[is.na(source_df)] <- ""
+    # source_df[["imputed_sex"]] <- trimws(source_df[["imputed_sex"]])
+    #
+    # return(source_df)
   }
   else if (imputation_type == "custom"){
     sex_imputation_file <- flag_lookup_table[["chosen_sex_file"]]
