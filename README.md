@@ -46,7 +46,7 @@ from the right-hand tab on the GitHub repository page. Download the
 run the code:
 
 ``` r
-path_to_pkg <- file.choose() # Select the unzipped package you downloaded from GitHub.
+path_to_pkg <- file.choose() # Select the unmodified package you downloaded from GitHub.
 devtools::install_local(path_to_pkg)
 ```
 
@@ -86,7 +86,7 @@ in one of two ways:
   ``` r
   input_file <- file.choose() # Choose the input file that contains the source dataset.
   dataset_code <- "mydataset" # This is the dataset_code we chose in the metadata application.
-  standardizing_options <- setNames(c("chunk_size", "convert_name_case", "compress_address_whitespace"), c(200000, "upper", "yes"))
+  standardizing_options <- create_standardizing_options_lookup(chunk_size = 10000, convert_name_case = "upper", read_mode = "cmd", file_output = "csv")
   output_folder <- choose.dir() # Choose the output folder where the cleaned data file will be output to.
   standardizing_rules <- choose.file() # Choose the .sqlite file containing the rules you just added.
 
