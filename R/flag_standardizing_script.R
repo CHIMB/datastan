@@ -191,14 +191,14 @@ impute_sex <- function(source_df, processed_names, processed_sexes, flag_lookup_
   imputation_type <- flag_lookup_table["impute_sex_type"]
 
   if(imputation_type == "default"){
-    return(source_df) #THE GENDER PACKAGE WONT INSTALL ON SOME COMPUTERS SO KEEP IT OUT FOR NOW
+    # return(source_df) #THE GENDER PACKAGE WONT INSTALL ON SOME COMPUTERS SO KEEP IT OUT FOR NOW
 
-    if(is.null(processed_genders))
-      temporary_gender_imputation_df <- data.frame(names = processed_names, genders = NA)
+    if(is.null(processed_sexes))
+      temporary_sex_imputation_df <- data.frame(names = processed_names, sex = NA)
     else
-      temporary_gender_imputation_df <- data.frame(names = processed_names, genders = processed_genders)
+      temporary_sex_imputation_df <- data.frame(names = processed_names, sex = processed_sexes)
 
-    names_to_impute <- temporary_gender_imputation_df[is.na(temporary_gender_imputation_df$genders), ]$names
+    names_to_impute <- temporary_sex_imputation_df[is.na(temporary_sex_imputation_df$sex), ]$names
 
     # Sample data
     df0 <- data.frame(v1 = names_to_impute, stringsAsFactors = FALSE)
@@ -218,12 +218,12 @@ impute_sex <- function(source_df, processed_names, processed_sexes, flag_lookup_
     # Remove the index column if needed
     df1 <- df1[, -which(names(df1) == "index")]
 
-    temporary_gender_imputation_df$genders[is.na(temporary_gender_imputation_df$genders)] <- df1$gender
-    temporary_gender_imputation_df$genders <- str_replace_all(temporary_gender_imputation_df$genders, "female", "F")
-    temporary_gender_imputation_df$genders <- str_replace_all(temporary_gender_imputation_df$genders, "male", "M")
+    temporary_sex_imputation_df$sex[is.na(temporary_sex_imputation_df$sex)] <- df1$gender
+    temporary_sex_imputation_df$sex <- str_replace_all(temporary_sex_imputation_df$sex, "female", "F")
+    temporary_sex_imputation_df$sex <- str_replace_all(temporary_sex_imputation_df$sex, "male", "M")
 
-    source_df[["imputed_sex"]] <- paste(source_df[["imputed_sex"]], temporary_gender_imputation_df$genders, sep = " ")
-    source_df[is.na(source_df)] <- "" #figure out how to get rid of these NA values, they are annoying.
+    source_df[["imputed_sex"]] <- paste(source_df[["imputed_sex"]], temporary_sex_imputation_df$sex, sep = " ")
+    source_df[is.na(source_df)] <- ""
     source_df[["imputed_sex"]] <- trimws(source_df[["imputed_sex"]])
     return(source_df)
   }
@@ -297,46 +297,6 @@ impute_sex <- function(source_df, processed_names, processed_sexes, flag_lookup_
     # Remove the sex summary data frame
     rm(sex_summary)
     gc()
-
-    # # Step 1: Use vectorized operations for gender imputation, create a named vector for faster look-up
-    # first_names_lookup <- setNames(source_df$gender, source_df$primary_given_name)
-    #
-    # # Step 2: Find the indices where the names exist in the first names list
-    # indices_list <- lapply(processed_names_na, function(name) which(names(first_names_lookup) == name))
-    #
-    # # Step 3: Create a function to determine the majority gender for each name
-    # get_majority_sex <- function(indices) {
-    #   if (length(indices) == 0) {
-    #     return(NA)  # Return NA if the name doesn't exist in the first names list
-    #   }
-    #   # Filter out NA and empty strings
-    #   valid_genders <- na.omit(source_df$gender[unlist(indices)])
-    #   valid_genders <- valid_genders[valid_genders != ""]  # Filter out empty strings
-    #
-    #   if (length(valid_genders) == 0) {
-    #     return(NA)  # Return NA if there are no valid genders
-    #   }
-    #
-    #   gender_counts <- table(valid_genders)
-    #   majority_sex <- names(gender_counts)[which.max(gender_counts)]
-    #   return(majority_sex)
-    # }
-    #
-    # # Step 4: Create a list to store majority genders for each name
-    # majority_sexes <- lapply(indices_list, get_majority_sex)
-    #
-    # # Step 5: Create a vector of majority genders corresponding to processed_names_na
-    # processed_sexes_na <- unlist(majority_sexes)
-    #
-    # # Step 6: Replace NA genders in processed_genders with imputed genders
-    # processed_genders[na_indices] <- processed_sexes_na
-    #
-    # # Step 7: Replace NA genders in processed_genders with imputed genders
-    # temporary_sex_imputation_df <- data.frame(names = processed_names, genders = processed_genders)
-    #
-    # # Step 8: Add the new column
-    # source_df[["imputed_sex"]] <- paste(source_df[["imputed_sex"]], temporary_sex_imputation_df$genders, sep = " ")
-    # source_df[["imputed_sex"]] <- trimws(source_df[["imputed_sex"]])
 
     return(source_df)
   }
@@ -506,7 +466,7 @@ compile_non_linkage_data <- function(source_data_frame, db_conn, dataset_id){
 #' @param list_all_curr_surnames Combine all surnames of a person into an additional column. (Options: "yes", "no")
 #' @param list_all_curr_names Combine all names of a person into an additional column. (Options: "yes", "no")
 #' @param impute_sex Impute missing values in sex fields. (Options: "yes", "no")
-#' @param impute_sex_type How should the sex imputation take place? (Options: "custom" - Must be a .csv file with two columns [primary_given_name] & [sex], "internal" - Use sex values from the source data set)
+#' @param impute_sex_type How should the sex imputation take place? (Options: "default" - Must have the gender and genderdata packages installed, "custom" - Must be a .csv file with two columns [primary_given_name] & [sex], "internal" - Use sex values from the source data set)
 #' @param chosen_sex_file If the custom type is chosen, supply an input file.
 #' @param compress_location_whitespace Replace location based fields white space with an empty string symbol. (Options: "yes", "no")
 #' @param remove_location_punctuation Remove any symbols or punctuation from location based fields. (Options: "yes", "no")
@@ -568,7 +528,7 @@ create_standardizing_options_lookup <- function(convert_name_case, convert_name_
 
   # Impute Sex Type
   if(missing(impute_sex_type) || (impute_sex_type != "custom" && impute_sex_type != "internal"))
-    impute_sex_type <- "internal"
+    impute_sex_type <- "default"
 
   # Chosen Sex Imputation File
   if(missing(chosen_sex_file) || (!file.exists(chosen_sex_file)))

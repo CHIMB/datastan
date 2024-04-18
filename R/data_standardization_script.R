@@ -135,7 +135,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
         for (i in seq_along(phin_field)) {
           # Get the current phin field
           curr_phin_field <- phin_field[i]
-          
+
           # Grab the unprocessed phins from the source data frame
           unprocessed_phins <- source_data_frame[[curr_phin_field]]
 
@@ -148,12 +148,12 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           # Replace all non-numerical characters with ''
           standardized_phins <- gsub("[^0-9.-]", "", standardized_phins)
 
-          # Replace a string made entirely of '0's with a blank character
+          # Replace a phin made entirely of '0's with a blank character
           standardized_phins <- gsub("^0+$", "", standardized_phins)
-          
+
           # Create a column for the standardized phins
           df[[paste0(standardized_col_name, "_", i)]] <- trimws(standardized_phins)
-          
+
           # if (curr_phin_field == phin_field[1]) {
           #   processed_phins <- standardized_phins
           # } else {
@@ -181,6 +181,9 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
           # Replace all punctuation/symbols in the phin field with a blank space
           unprocessed_registration_nos <- stri_replace_all_regex(unprocessed_registration_nos, "[-.'[:punct:] ]+", "")
+
+          # Replace a registration number made entirely of '0's with a blank character
+          unprocessed_registration_nos <- gsub("^0+$", "", unprocessed_registration_nos)
 
           if (curr_registration_no_field == reg_fields[1]) {
             processed_registration_nos <- unprocessed_registration_nos
@@ -1647,6 +1650,9 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
         # Extract the line count from the output
         line_count <- as.numeric(strsplit(line_count_output, "\\s+")[[1]][1])
+
+        # Create a variable counting the number of chunks read
+        chunks_read <- 0
       }
 
       tryCatch({
@@ -1659,21 +1665,21 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
             if(read_mode == "cmd"){
               read_cmd <- paste0("tail -n +1 ", file_path, " | head -n ", chunk_size+1)
-              chunk_read <- fread(cmd = read_cmd, colClasses = "character", data.table = TRUE) #Removed fill = TRUE
+              chunk_read <- fread(cmd = read_cmd, colClasses = "character", data.table = TRUE, blank.lines.skip = TRUE) #Removed fill = TRUE
             }
             else{
-              chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, skip = rows_read + 1, data.table = TRUE) #Removed fill = TRUE
+              chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, skip = rows_read + 1, data.table = TRUE, blank.lines.skip = TRUE) #Removed fill = TRUE
             }
 
             rows_read <- 1
           }
           else{
             if(read_mode == "cmd"){
-              read_cmd <- paste0("head -n ", rows_read + chunk_size, " ", file_path, " | tail -", chunk_size)
-              chunk_read <- fread(cmd = read_cmd, header = FALSE, colClasses = "character", data.table = TRUE, sep = "\t") #Removed fill = TRUE
+              read_cmd <- paste0("head -n ", chunks_read + chunk_size, " ", file_path, " | tail -", chunk_size)
+              chunk_read <- fread(cmd = read_cmd, header = FALSE, colClasses = "character", data.table = TRUE, sep = "\t", blank.lines.skip = TRUE) #Removed fill = TRUE
             }
             else{
-              chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, skip = rows_read, data.table = TRUE) #Removed fill = TRUE
+              chunk_read <- fread(input = file_path, header = FALSE, nrows = chunk_size, skip = rows_read, data.table = TRUE, blank.lines.skip = TRUE) #Removed fill = TRUE
             }
           }
           # Call garbage collector
@@ -1762,8 +1768,15 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
           # If the size of the read chunk is less than our chunk size, break out of the loop
           if(rows_read_chunk < chunk_size){
-            print(paste0("Breaking: ", rows_read_chunk, " < ", chunk_size))
-            break
+            if(read_mode != "cmd"){
+              print(paste0("Breaking: ", rows_read_chunk, " < ", chunk_size))
+              break
+            }
+          }
+
+          # Modify how many chunks have been read
+          if(read_mode == "cmd"){
+            chunks_read <- chunks_read + chunk_size
           }
 
           # If we read all lines in the file, break
@@ -2297,6 +2310,19 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
     error_handle(NULL, "ERROR: Input flags format is invalid, use setNames(values, codes) as parameter.", NULL, input_file_path, output_folder)
   })
   #----
+
+  # Error handling to check for sex imputation, if user selects default method, they must have the required packages
+  #----#
+  if(flag_lookup["impute_sex_type"] == "default"){
+    tryCatch({
+      library("gender")
+      library("genderdata")
+    },
+    error = function(e){
+      error_handle(NULL, "ERROR: gender OR genderdata package(s) are not installed, choose another sex imputation method or install the required packages.", NULL, input_file_path, output_folder)
+    })
+  }
+  #----#
 
   # Error handling to ensure the provided SQLite file is actually an SQLite file
   #----#

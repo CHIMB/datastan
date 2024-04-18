@@ -45,7 +45,7 @@ create_standardizing_options_lookup(
 
 \item{impute_sex}{Impute missing values in sex fields. (Options: "yes", "no")}
 
-\item{impute_sex_type}{How should the sex imputation take place? (Options: "custom" - Must be a .csv file with two columns [primary_given_name] & [sex], "internal" - Use sex values from the source data set)}
+\item{impute_sex_type}{How should the sex imputation take place? (Options: "default" - Must have the gender and genderdata packages installed, "custom" - Must be a .csv file with two columns [primary_given_name] & [sex], "internal" - Use sex values from the source data set)}
 
 \item{chosen_sex_file}{If the custom type is chosen, supply an input file.}
 
