@@ -2313,7 +2313,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
   # Error handling to check for sex imputation, if user selects default method, they must have the required packages
   #----#
-  if(flag_lookup["impute_sex_type"] == "default"){
+  if(flag_lookup["impute_sex"] == "yes" && flag_lookup["impute_sex_type"] == "default"){
     tryCatch({
       library("gender")
       library("genderdata")
