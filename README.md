@@ -105,9 +105,11 @@ in one of two ways:
 
 For more details on how the code processes and cleans data, reads from
 the metadata, how the user interfaces work on the back-end, consider
-reading the <b>Developer Facing Documentation</b>.
+reading the [<b>Developer Facing Documentation
+(448.3KB)</b>](https://github.com/CHIMB/datastan/blob/main/docs/DEVELOPER_DOCUMENTATION.pdf).
 
 For more details on how to work function calls, how to navigate the
 pages of the user interfaces, and how to make changes, or add new
-information to the metadata, consider reading the <b>User Facing
-Documentation</b>.
+information to the metadata, consider reading the [<b>User Facing
+Documentation
+(1.5MB)</b>](https://github.com/CHIMB/datastan/blob/main/docs/USER_DOCUMENTATION.pdf).
