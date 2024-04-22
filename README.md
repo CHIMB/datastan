@@ -101,6 +101,32 @@ in one of two ways:
   startDataStandardizationUI()
   ```
 
+# Missing Value Imputation
+
+One of the features of the `datastan` package is the ability to try and
+impute missing values in fields like postal codes and sex. One of the
+options within the sex imputation is to accept a custom <b>.csv</b> file
+to use as imputation, if the user would like to supply such a file when
+standardizing data then the file must follow this schema:
+
+There should be at least two columns, with the first names of the
+individuals under the column name <b>primary_given_name</b> and their
+corresponding sex values under the column name <b>sex</b>. Names should
+only appear once and have a majority sex value that they map to for
+proper imputation when standardizing data. The outline of the csv should
+look as follows:
+
+| primary_given_name | sex |
+|:-------------------|:----|
+| John               | M   |
+| Jane               | F   |
+| Jim                | M   |
+| Sam                | M   |
+| Chris              | M   |
+| Mabel              | F   |
+
+Custom CSV Imputation File
+
 # Additional Information & Documentation
 
 For more details on how the code processes and cleans data, reads from

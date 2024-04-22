@@ -183,6 +183,11 @@ create_new_metadata <- function(file_name, output_folder){
                            'VALUES(4, "Comma Seperated Values", "csv");')
   new_entry <- dbSendStatement(my_db, new_entry_query)
   dbClearResult(new_entry)
+
+  new_entry_query <- paste('INSERT INTO file_formats (file_format_id, file_format_label, file_extension_code)',
+                           'VALUES(5, "Database", "db");')
+  new_entry <- dbSendStatement(my_db, new_entry_query)
+  dbClearResult(new_entry)
   #----
 
   # Insert Statements for Destination Fields

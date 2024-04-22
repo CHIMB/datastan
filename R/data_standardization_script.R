@@ -2259,6 +2259,165 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       # Close the SQLite database connection
       dbDisconnect(clean_db_conn)
     }
+    # If the file_type is a database or sqlite file, we will connect and read the data this way (DBGETQUERY)
+    else if (my_file_type == "db"){
+      # Set our chunking size
+      chunk_size <- chunking_size
+
+      # Create the full path to the output SQLite file within the output folder
+      output_sqlite_file <- file.path(output_folder, paste0(dataset_code, "_cleaned_dataset_db.sqlite"))
+      clean_sqlite_path  <- output_sqlite_file
+
+      # Create a new data base (SQLite) that we can append to
+      clean_db_conn <- dbConnect(RSQLite::SQLite(), output_sqlite_file)
+
+      # Establish variables for how many rows have currently been read, and each records primary key
+      rows_read <- 0
+      record_primary_key <- 1
+
+      # Connect to our source database
+      source_db <- dbConnect(RSQLite::SQLite(), file_path)
+
+      # Get the table name to pull the source data from
+      table_name <- dbListTables(source_db)[1]
+
+      tryCatch({
+        while(TRUE){
+          gc()
+
+          # Create the query for grabbing our chunk
+          chunk_query <- paste0("SELECT * from '", table_name, "' LIMIT ?,?;")
+          chunk_read_output <- dbSendQuery(source_db, chunk_query)
+          dbBind(chunk_read_output, list(rows_read, chunk_size))
+          chunk_read <- dbFetch(chunk_read_output)
+          dbClearResult(chunk_read_output)
+
+          # Call garbage collector
+          gc()
+
+          # Extract the fields we need for linkage.
+          chunk <- select(chunk_read, column_numbers)
+
+          # Break if the chunk is empty
+          if(nrow(chunk) <= 0)
+            break
+
+          # Determine how many rows were read and print it to console
+          rows_read <- rows_read + nrow(chunk)
+          print(paste("Rows Read: ", rows_read))
+
+          # Get the rows read from this current chunk
+          rows_read_chunk <- nrow(chunk)
+
+          # Modify the reactive value with how many rows have been read, then send a notification
+          total_rows_read(rows_read)
+
+          # If we are outputting the program and health data, run another function to grab all the data we didn't need to standardize
+          output_non_linkage_fields_value <- flag_lookup_table["output_non_linkage_fields"]
+          if(output_non_linkage_fields_value == "yes"){
+            # Call function in "flag_standardizing_script.R" to return a dataset containing the health/program data
+            chunk_read <- compile_non_linkage_data(chunk_read, standardization_rules_metadata_conn, dataset_id)
+            chunk_read[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(chunk_read) - 1)
+            dbWriteTable(clean_db_conn2, "clean_data_table", chunk_read, append = TRUE)
+
+            # Standardize the output format
+            standardize_file_output(chunk_read, output_folder, flag_lookup_table, paste0(dataset_code, "_non_linkage"))
+          }
+
+          # Remove the read chunk that was used for non-linkage purposes and call garbage collector
+          rm(chunk_read)
+          gc()
+
+          #Get the number of fields that the data SHOULD have
+          fields_found <- ncol(chunk)
+          if(flag_lookup_table["debug_mode"] == "on"){
+            print(paste("We found [", fields_found, "] fields."))
+            cat("\n")
+          }
+
+          if(fields_found != num_of_expected_fields){
+            stop(paste("Error In pre_process_chunks(), number of columns read does ",
+                       "not match the expected number of columns. ", cat("\n"),
+                       "Expected [",num_of_expected_fields, "] columns, found ",
+                       "[", fields_found, "]", sep=""))
+          }
+
+          # Grab the column names from the metadata
+          column_names <- output_fields$source_field_name
+          colnames(chunk) <- column_names
+
+          # Add a sequential record primary key to the chunk
+          chunk[["record_primary_key"]] <- record_primary_key:(record_primary_key + nrow(chunk) - 1)
+
+          # Increment the record primary key counter
+          record_primary_key <- record_primary_key + nrow(chunk)
+
+          # Clean the data frame using our pre_process_data() function
+          chunk <- pre_process_data(chunk, split_data, standardization_rules_metadata_conn, dataset_id,
+                                    standardized_name_lookup, standardized_function_lookup, flag_lookup_table)
+
+          # Replace NA values with ""
+          chunk[is.na(chunk)] <- ""
+
+          # Append the clean_dataframe to the SQLite database
+          dbWriteTable(clean_db_conn, "clean_data_table", chunk, append = TRUE)
+
+          # Standardize the output format
+          standardize_file_output(chunk, output_folder, flag_lookup_table, dataset_code)
+
+          # Remove the cleaned data frame, then call garbage collector
+          rm(chunk)
+          gc()
+
+          tryCatch({
+            showNotification(paste("Total Rows Processed:", as.integer(total_rows_read())), type = "warning", closeButton = FALSE)
+          },
+          error = function(e){
+            print("Can't send notification without a UI.")
+          })
+
+          # If the size of the read chunk is less than our chunk size, break out of the loop
+          if(rows_read_chunk < chunk_size){
+            if(read_mode != "cmd"){
+              print(paste0("Breaking: ", rows_read_chunk, " < ", chunk_size))
+              break
+            }
+          }
+
+          # Modify how many chunks have been read
+          if(read_mode == "cmd"){
+            chunks_read <- chunks_read + chunk_size
+          }
+
+          if(read_mode == "cmd" && rows_read >= line_count){
+            print(paste0("Breaking: Read all ", line_count, " rows"))
+            break
+          }
+
+          # Modify the chunking size if there are less rows than need to be read
+          if(read_mode == "cmd" && line_count - rows_read < chunk_size){
+            chunk_size <- line_count - rows_read
+            print(paste("Almost finished, changing chunk size to:", chunk_size))
+          }
+        }
+      },
+      error = function(e){
+        errmsg <- geterrmessage()
+        if(grepl("skip=", errmsg, fixed = TRUE) == FALSE)
+          error_handle(standardization_rules_metadata_conn, errmsg, clean_db_conn, file_path, output_folder)
+        else
+          print(errmsg)
+      })
+
+      print("Finished Reading!")
+
+      # Disconnect from the database connection
+      dbDisconnect(clean_db_conn)
+
+      # Disconnect from the source database connection
+      dbDisconnect(source_db)
+
+    }
 
     # Disconnect from the program data database connection if the flag value is "yes"
     output_non_linkage_fields_value <- flag_lookup_table["output_non_linkage_fields"]
