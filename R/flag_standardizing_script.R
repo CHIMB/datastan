@@ -267,7 +267,7 @@ impute_sex <- function(source_df, processed_names, processed_sexes, flag_lookup_
   }
   else if (imputation_type == "custom"){
     sex_imputation_file <- flag_lookup_table[["chosen_sex_file"]]
-    sex_infer_df <- read_csv(sex_imputation_file, show_col_types = FALSE)
+    sex_infer_df <- fread(sex_imputation_file)
 
     # # Group by name and calculate the majority gender for each name
     # sex_summary <- sex_infer_df %>%
