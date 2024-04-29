@@ -2612,7 +2612,7 @@ dataset_server <- function(input, output, session, metadata_connection){
 
     new_entry_query <- paste("INSERT INTO datasets (dataset_code, dataset_name, has_header, file_format_id, enabled_for_standardization)",
                              "VALUES(?, ?, ?, ?, 1);")
-    new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+    new_entry <- dbSendStatement(metadata_connection, new_entry_query)
     dbBind(new_entry, list(dataset_code, dataset_name, has_header, file_format_id))
     dbClearResult(new_entry)
 
@@ -2663,7 +2663,7 @@ dataset_server <- function(input, output, session, metadata_connection){
     update_query <- paste("UPDATE datasets
                               SET dataset_code = ?, dataset_name = ?, has_header = ?, file_format_id = ?
                               WHERE dataset_id = ?")
-    update <- dbSendQuery(metadata_connection, update_query)
+    update <- dbSendStatement(metadata_connection, update_query)
     dbBind(update, list(dataset_code, dataset_name, has_header, file_format_id, selected_dataset_id))
     dbClearResult(update)
 
@@ -2930,14 +2930,14 @@ dataset_server <- function(input, output, session, metadata_connection){
 
       # Increment the field_order of existing entries where field_order >= new_field_order
       update_query <- paste("UPDATE source_fields SET field_order = field_order + 1 where field_order >= ? and dataset_id = ?")
-      update_statement <- dbSendQuery(metadata_connection, update_query)
+      update_statement <- dbSendStatement(metadata_connection, update_query)
       dbBind(update_statement, list(field_order, dataset_id))
       dbClearResult(update_statement)
 
       # Create a query for inserting a new source field into source_fields
       new_entry_query <- paste("INSERT INTO source_fields (dataset_id, source_field_name, field_order, fixed_width_length, standardizing_module_id)",
                                "VALUES(?, ?, ?, ?, ?);")
-      new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+      new_entry <- dbSendStatement(metadata_connection, new_entry_query)
       dbBind(new_entry, list(dataset_id, source_field_name, field_order, fixed_width_length, standardizing_module))
       dbClearResult(new_entry)
 
@@ -2947,7 +2947,7 @@ dataset_server <- function(input, output, session, metadata_connection){
       # Create a query for inserting a new compound field into compound_fields
       new_entry_query <- paste("INSERT INTO compound_fields (source_field_id, compound_field_format_id)",
                                "VALUES(?, ?);")
-      new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+      new_entry <- dbSendStatement(metadata_connection, new_entry_query)
       dbBind(new_entry, list(source_field_id, compound_format_id))
       dbClearResult(new_entry)
 
@@ -2978,14 +2978,14 @@ dataset_server <- function(input, output, session, metadata_connection){
 
       # Increment the field_order of existing entries where field_order >= new_field_order
       update_query <- paste("UPDATE source_fields SET field_order = field_order + 1 where field_order >= ? and dataset_id = ?")
-      update_statement <- dbSendQuery(metadata_connection, update_query)
+      update_statement <- dbSendStatement(metadata_connection, update_query)
       dbBind(update_statement, list(field_order, dataset_id))
       dbClearResult(update_statement)
 
       # Create a query for inserting a new source field into source_fields
       new_entry_query <- paste("INSERT INTO source_fields (dataset_id, source_field_name, field_order, fixed_width_length, standardizing_module_id)",
                                "VALUES(?, ?, ?, ?, ?);")
-      new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+      new_entry <- dbSendStatement(metadata_connection, new_entry_query)
       dbBind(new_entry, list(dataset_id, source_field_name, field_order, fixed_width_length, standardizing_module))
       dbClearResult(new_entry)
 
@@ -3002,7 +3002,7 @@ dataset_server <- function(input, output, session, metadata_connection){
         # Create a query for inserting a new categorical field into categorical_fields
         new_entry_query <- paste("INSERT INTO categorical_fields (source_field_id, source_value, standardized_value_id)",
                                  "VALUES(?, ?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+        new_entry <- dbSendStatement(metadata_connection, new_entry_query)
         dbBind(new_entry, list(source_field_id, categorical_input_value, categorical_standardized_value))
         dbClearResult(new_entry)
       }
@@ -3013,14 +3013,14 @@ dataset_server <- function(input, output, session, metadata_connection){
     else if (!is.null(standardizing_module) && standardizing_module_type == 4){
       # Increment the field_order of existing entries where field_order >= new_field_order
       update_query <- paste("UPDATE source_fields SET field_order = field_order + 1 where field_order >= ? and dataset_id = ?")
-      update_statement <- dbSendQuery(metadata_connection, update_query)
+      update_statement <- dbSendStatement(metadata_connection, update_query)
       dbBind(update_statement, list(field_order, dataset_id))
       dbClearResult(update_statement)
 
       # Create a query for inserting a new source field into source_fields
       new_entry_query <- paste("INSERT INTO source_fields (dataset_id, source_field_name, field_order, fixed_width_length, standardizing_module_id)",
                                "VALUES(?, ?, ?, ?, ?);")
-      new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+      new_entry <- dbSendStatement(metadata_connection, new_entry_query)
       dbBind(new_entry, list(dataset_id, source_field_name, field_order, fixed_width_length, standardizing_module))
       dbClearResult(new_entry)
 
@@ -3035,7 +3035,7 @@ dataset_server <- function(input, output, session, metadata_connection){
       # Create a query for inserting a new compound field into compound_fields
       new_entry_query <- paste("INSERT INTO numeric_date_fields (source_field_id, numeric_date_format_id, numeric_destination_type)",
                                "VALUES(?, ?, ?);")
-      new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+      new_entry <- dbSendStatement(metadata_connection, new_entry_query)
       dbBind(new_entry, list(source_field_id, numeric_format_id, numeric_dest_type))
       dbClearResult(new_entry)
     }
@@ -3066,14 +3066,14 @@ dataset_server <- function(input, output, session, metadata_connection){
 
       # Increment the field_order of existing entries where field_order >= new_field_order
       update_query <- paste("UPDATE source_fields SET field_order = field_order + 1 where field_order >= ? and dataset_id = ?")
-      update_statement <- dbSendQuery(metadata_connection, update_query)
+      update_statement <- dbSendStatement(metadata_connection, update_query)
       dbBind(update_statement, list(field_order, dataset_id))
       dbClearResult(update_statement)
 
       # Create a query for inserting a new source field into source_fields
       new_entry_query <- paste("INSERT INTO source_fields (dataset_id, source_field_name, field_order, fixed_width_length, standardizing_module_id)",
                                "VALUES(?, ?, ?, ?, ?);")
-      new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+      new_entry <- dbSendStatement(metadata_connection, new_entry_query)
       dbBind(new_entry, list(dataset_id, source_field_name, field_order, fixed_width_length, standardizing_module))
       dbClearResult(new_entry)
 
@@ -3090,7 +3090,7 @@ dataset_server <- function(input, output, session, metadata_connection){
         # Create a query for inserting a new categorical field into categorical_fields
         new_entry_query <- paste("INSERT INTO record_priority_fields (source_field_id, source_value, priority)",
                                  "VALUES(?, ?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+        new_entry <- dbSendStatement(metadata_connection, new_entry_query)
         dbBind(new_entry, list(source_field_id, categorical_input_value, categorical_standardized_value))
         dbClearResult(new_entry)
       }
@@ -3105,14 +3105,14 @@ dataset_server <- function(input, output, session, metadata_connection){
 
       # Increment the field_order of existing entries where field_order >= new_field_order
       update_query <- paste("UPDATE source_fields SET field_order = field_order + 1 where field_order >= ? and dataset_id = ?")
-      update_statement <- dbSendQuery(metadata_connection, update_query)
+      update_statement <- dbSendStatement(metadata_connection, update_query)
       dbBind(update_statement, list(field_order, dataset_id))
       dbClearResult(update_statement)
 
       # Create a query for inserting a new source field into source_fields
       new_entry_query <- paste("INSERT INTO source_fields (dataset_id, source_field_name, field_order, fixed_width_length, standardizing_module_id)",
                                "VALUES(?, ?, ?, ?, ?);")
-      new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+      new_entry <- dbSendStatement(metadata_connection, new_entry_query)
       dbBind(new_entry, list(dataset_id, source_field_name, field_order, fixed_width_length, standardizing_module))
       dbClearResult(new_entry)
 
@@ -3302,7 +3302,7 @@ dataset_server <- function(input, output, session, metadata_connection){
       # Create a query for inserting a new compound format into compound_field_formats
       new_entry_query <- paste("INSERT INTO compound_field_formats (compound_format, format_description)",
                                "VALUES(?, ?);")
-      new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+      new_entry <- dbSendStatement(metadata_connection, new_entry_query)
       dbBind(new_entry, list(format, format_description))
       dbClearResult(new_entry)
 
@@ -3314,7 +3314,7 @@ dataset_server <- function(input, output, session, metadata_connection){
         # Create a query for inserting a new compound separator entry into compound_field_separators
         new_entry_query <- paste("INSERT INTO compound_field_separators (compound_field_format_id, separator_order, separator, substring_index)",
                                  "VALUES(?, ?, ?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+        new_entry <- dbSendStatement(metadata_connection, new_entry_query)
         dbBind(new_entry, list(compound_field_format_id, i, separators[i], NA)) #NA for now, change it later!
         dbClearResult(new_entry)
       }
@@ -3324,7 +3324,7 @@ dataset_server <- function(input, output, session, metadata_connection){
         # Create a query for inserting a new compound separator entry into compound_field_destinations
         new_entry_query <- paste("INSERT INTO compound_field_destinations (compound_field_format_id, destination_mapping_order, destination_field_id)",
                                  "VALUES(?, ?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+        new_entry <- dbSendStatement(metadata_connection, new_entry_query)
         dbBind(new_entry, list(compound_field_format_id, i, destination_field_ids[i]))
         dbClearResult(new_entry)
       }
@@ -3357,7 +3357,7 @@ dataset_server <- function(input, output, session, metadata_connection){
       # Create a query for inserting a new compound format into compound_field_formats
       new_entry_query <- paste("INSERT INTO compound_field_formats (compound_format, format_description)",
                                "VALUES(?, ?);")
-      new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+      new_entry <- dbSendStatement(metadata_connection, new_entry_query)
       dbBind(new_entry, list(format, format_description))
       dbClearResult(new_entry)
 
@@ -3369,7 +3369,7 @@ dataset_server <- function(input, output, session, metadata_connection){
         # Create a query for inserting a new compound separator entry into compound_field_separators
         new_entry_query <- paste("INSERT INTO compound_field_separators (compound_field_format_id, separator_order, separator, substring_index)",
                                  "VALUES(?, ?, ?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+        new_entry <- dbSendStatement(metadata_connection, new_entry_query)
         dbBind(new_entry, list(compound_field_format_id, i, NA, indexes[i])) #NA for now, change it later!
         dbClearResult(new_entry)
       }
@@ -3379,7 +3379,7 @@ dataset_server <- function(input, output, session, metadata_connection){
         # Create a query for inserting a new compound separator entry into compound_field_destinations
         new_entry_query <- paste("INSERT INTO compound_field_destinations (compound_field_format_id, destination_mapping_order, destination_field_id)",
                                  "VALUES(?, ?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+        new_entry <- dbSendStatement(metadata_connection, new_entry_query)
         dbBind(new_entry, list(compound_field_format_id, i, destination_field_ids[i]))
         dbClearResult(new_entry)
       }
@@ -3530,7 +3530,7 @@ dataset_server <- function(input, output, session, metadata_connection){
       # Create a query for inserting a new categorical field into categorical_fields
       new_entry_query <- paste("INSERT INTO categorical_fields (source_field_id, source_value, standardized_value_id)",
                                "VALUES(?, ?, ?);")
-      new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+      new_entry <- dbSendStatement(metadata_connection, new_entry_query)
       dbBind(new_entry, list(source_id_categorical_field_add, categorical_input_value, categorical_standardized_value))
       dbClearResult(new_entry)
     }
@@ -3584,7 +3584,7 @@ dataset_server <- function(input, output, session, metadata_connection){
       # Create a query for inserting a new categorical field into categorical_fields
       new_entry_query <- paste("INSERT INTO categorical_values (standardized_value)",
                                "VALUES(?);")
-      new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+      new_entry <- dbSendStatement(metadata_connection, new_entry_query)
       dbBind(new_entry, list(new_categorical_val))
       dbClearResult(new_entry)
     }
@@ -3654,7 +3654,7 @@ dataset_server <- function(input, output, session, metadata_connection){
     # Create a query for inserting a new numeric format
     new_entry_query <- paste("INSERT INTO numeric_date_formats (numeric_date_format_label, origin_date, units_label)",
                              "VALUES(?, ?, ?);")
-    new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+    new_entry <- dbSendStatement(metadata_connection, new_entry_query)
     dbBind(new_entry, list(format_label, origin_date, units_label))
     dbClearResult(new_entry)
 
@@ -3792,7 +3792,7 @@ dataset_server <- function(input, output, session, metadata_connection){
       # Create a query for inserting a new categorical field into categorical_fields
       new_entry_query <- paste("INSERT INTO record_priority_fields (source_field_id, source_value, priority)",
                                "VALUES(?, ?, ?);")
-      new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+      new_entry <- dbSendStatement(metadata_connection, new_entry_query)
       dbBind(new_entry, list(source_id_record_priority_add, categorical_input_value, categorical_standardized_value))
       dbClearResult(new_entry)
     }
@@ -4050,81 +4050,31 @@ dataset_server <- function(input, output, session, metadata_connection){
     }
     #----#
 
-    if(!is.null(new_standardizing_module) && standardizing_module_type == 2){
+    tryCatch({
+      # Start a transaction
+      dbBegin(metadata_connection)
 
-      # Fetch data from the database
-      df <- dbGetQuery(metadata_connection, 'SELECT * FROM compound_field_formats')
+      if(!is.null(new_standardizing_module) && standardizing_module_type == 2){
 
-      # Using the selected compound format row, determine whether we need to make
-      # a new format
-      selected_row <- input$updated_compound_format_type_rows_selected
-      compound_format_id <- df[selected_row, "compound_field_format_id"]
+        # Fetch data from the database
+        df <- dbGetQuery(metadata_connection, 'SELECT * FROM compound_field_formats')
 
-      # Branch for if we need to create a new compound format for the updated source field
-      if(is.na(compound_format_id)){
-        num_separators     <- input$updated_number_of_separators
-        format_description <- input$updated_compound_format_description
-        format             <- input$updated_compound_format
-        separators <- c()
-        # indexes <- c()
-        destination_field_ids <- c()
-        for(i in seq_len(num_separators + 1)){
-          if(i <= num_separators){
-            separator_input_id <- paste0("updated_separator_", i)
-            separator_value <- input[[separator_input_id]]
-            separators <- c(separators, separator_value)
-          }
-
-          destination_field_input_id <- paste0("updated_separator_destination_field_", i)
-          destination_field_value <- input[[destination_field_input_id]]
-          destination_field_ids <- c(destination_field_ids, destination_field_value)
-        }
-
-        # Create a query for inserting a new compound format into compound_field_formats
-        new_entry_query <- paste("INSERT INTO compound_field_formats (compound_format, format_description)",
-                                 "VALUES(?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
-        dbBind(new_entry, list(format, format_description))
-        dbClearResult(new_entry)
-
-        # Get the most recently inserted compound_field_format_id value
-        compound_field_format_id <- dbGetQuery(metadata_connection, "SELECT last_insert_rowid() AS compound_field_format_id;")$compound_field_format_id
-
-        # Loop for adding the separators into the metadata
-        for(i in seq_along(separators)){
-          # Create a query for inserting a new compound separator entry into compound_field_separators
-          new_entry_query <- paste("INSERT INTO compound_field_separators (compound_field_format_id, separator_order, separator, substring_index)",
-                                   "VALUES(?, ?, ?, ?);")
-          new_entry <- dbSendQuery(metadata_connection, new_entry_query)
-          dbBind(new_entry, list(compound_field_format_id, i, separators[i], NA)) #NA for now, change it later!
-          dbClearResult(new_entry)
-        }
-
-        # Loop for adding the compound field destinations into the metadata
-        for(i in seq_along(destination_field_ids)){
-          # Do we want this to fill it in with an NA incase of "null"? We can decide later
-          if(destination_field_ids[i] != "null"){
-            # Create a query for inserting a new compound separator entry into compound_field_destinations
-            new_entry_query <- paste("INSERT INTO compound_field_destinations (compound_field_format_id, destination_mapping_order, destination_field_id)",
-                                     "VALUES(?, ?, ?);")
-            new_entry <- dbSendQuery(metadata_connection, new_entry_query)
-            dbBind(new_entry, list(compound_field_format_id, i, destination_field_ids[i]))
-            dbClearResult(new_entry)
-          }
-        }
+        # Using the selected compound format row, determine whether we need to make
+        # a new format
+        selected_row <- input$updated_compound_format_type_rows_selected
+        compound_format_id <- df[selected_row, "compound_field_format_id"]
 
         #Update field order of the source field and update the old one if necessary
         update_query <- paste("UPDATE source_fields SET field_order = ? where field_order = ? and dataset_id = ?")
-        update_statement <- dbSendQuery(metadata_connection, update_query)
+        update_statement <- dbSendStatement(metadata_connection, update_query)
         dbBind(update_statement, list(old_field_order, new_field_order, dataset_id))
         dbClearResult(update_statement)
 
-
         # Create a query for updating the source field
         update_query <- paste("UPDATE source_fields
-                              SET source_field_name = ?, field_order = ?, fixed_width_length = ?, standardizing_module_id = ?
-                              WHERE source_field_id = ?")
-        update <- dbSendQuery(metadata_connection, update_query)
+                            SET source_field_name = ?, field_order = ?, fixed_width_length = ?, standardizing_module_id = ?
+                            WHERE source_field_id = ?")
+        update <- dbSendStatement(metadata_connection, update_query)
         dbBind(update, list(new_source_field_name, new_field_order, new_fixed_width_length, new_standardizing_module, source_field_id_to_update))
         dbClearResult(update)
 
@@ -4132,341 +4082,303 @@ dataset_server <- function(input, output, session, metadata_connection){
         # other tables
         delete_query <- paste("DELETE from compound_fields",
                               "WHERE source_field_id = ?")
-        delete <- dbSendQuery(metadata_connection, delete_query)
+        delete <- dbSendStatement(metadata_connection, delete_query)
         dbBind(delete, list(source_field_id_to_update))
         dbClearResult(delete)
 
         delete_query <- paste("DELETE from categorical_fields",
                               "WHERE source_field_id = ?")
-        delete <- dbSendQuery(metadata_connection, delete_query)
+        delete <- dbSendStatement(metadata_connection, delete_query)
         dbBind(delete, list(source_field_id_to_update))
         dbClearResult(delete)
 
         delete_query <- paste("DELETE from numeric_date_fields",
                               "WHERE source_field_id = ?")
-        delete <- dbSendQuery(metadata_connection, delete_query)
+        delete <- dbSendStatement(metadata_connection, delete_query)
         dbBind(delete, list(source_field_id_to_update))
         dbClearResult(delete)
 
         delete_query <- paste("DELETE from record_priority_fields",
                               "WHERE source_field_id = ?")
-        delete <- dbSendQuery(metadata_connection, delete_query)
+        delete <- dbSendStatement(metadata_connection, delete_query)
         dbBind(delete, list(source_field_id_to_update))
         dbClearResult(delete)
 
         # Create a query for inserting a new compound field into compound_fields
         new_entry_query <- paste("INSERT INTO compound_fields (source_field_id, compound_field_format_id)",
                                  "VALUES(?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
-        dbBind(new_entry, list(source_field_id_to_update, compound_field_format_id))
-        dbClearResult(new_entry)
-      }
-      # Branch for if we are using an existing compound format for this source field.
-      else{
-        #Update field order of the source field and update the old one if necessary
-        update_query <- paste("UPDATE source_fields SET field_order = ? where field_order = ? and dataset_id = ?")
-        update_statement <- dbSendQuery(metadata_connection, update_query)
-        dbBind(update_statement, list(old_field_order, new_field_order, dataset_id))
-        dbClearResult(update_statement)
-
-        # Create a query for updating the source field
-        update_query <- paste("UPDATE source_fields
-                              SET source_field_name = ?, field_order = ?, fixed_width_length = ?, standardizing_module_id = ?
-                              WHERE source_field_id = ?")
-        update <- dbSendQuery(metadata_connection, update_query)
-        dbBind(update, list(new_source_field_name, new_field_order, new_fixed_width_length, new_standardizing_module, source_field_id_to_update))
-        dbClearResult(update)
-
-        # Create a query for deleting the records that use the same source field in
-        # other tables
-        delete_query <- paste("DELETE from compound_fields",
-                              "WHERE source_field_id = ?")
-        delete <- dbSendQuery(metadata_connection, delete_query)
-        dbBind(delete, list(source_field_id_to_update))
-        dbClearResult(delete)
-
-        delete_query <- paste("DELETE from categorical_fields",
-                              "WHERE source_field_id = ?")
-        delete <- dbSendQuery(metadata_connection, delete_query)
-        dbBind(delete, list(source_field_id_to_update))
-        dbClearResult(delete)
-
-        delete_query <- paste("DELETE from numeric_date_fields",
-                              "WHERE source_field_id = ?")
-        delete <- dbSendQuery(metadata_connection, delete_query)
-        dbBind(delete, list(source_field_id_to_update))
-        dbClearResult(delete)
-
-        delete_query <- paste("DELETE from record_priority_fields",
-                              "WHERE source_field_id = ?")
-        delete <- dbSendQuery(metadata_connection, delete_query)
-        dbBind(delete, list(source_field_id_to_update))
-        dbClearResult(delete)
-
-        # Create a query for inserting a new compound field into compound_fields
-        new_entry_query <- paste("INSERT INTO compound_fields (source_field_id, compound_field_format_id)",
-                                 "VALUES(?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+        new_entry <- dbSendStatement(metadata_connection, new_entry_query)
         dbBind(new_entry, list(source_field_id_to_update, compound_format_id))
         dbClearResult(new_entry)
       }
-    }
-    else if (!is.null(new_standardizing_module) && standardizing_module_type == 3){
-      num_categorical_fields <- input$updated_number_of_categorical_fields
+      else if (!is.null(new_standardizing_module) && standardizing_module_type == 3){
+        num_categorical_fields <- input$updated_number_of_categorical_fields
 
-      # Error handling to ensure adding a source field goes smoothly
-      #----#
-      if(is.nan(num_categorical_fields) || is.na(num_categorical_fields) || num_categorical_fields == 0){
-        showNotification("Error - Invalid Number of Categorical Fields", type = "error", closeButton = FALSE)
-        return()
-      }
-
-      for(i in seq_len(num_categorical_fields)){
-        categorical_input_value_id <- paste0("updated_categorical_input_value_", i)
-        categorical_input_value <- input[[categorical_input_value_id]]
-
-        categorical_standardized_value_id <- paste0("updated_categorical_output_value_", i)
-        categorical_standardized_value <- input[[categorical_standardized_value_id]]
-
-        if(categorical_input_value == ""){
-          showNotification("Failed to Update Source Field - Some Categorical Inputs are Missing", type = "error", closeButton = FALSE)
+        # Error handling to ensure adding a source field goes smoothly
+        #----#
+        if(is.nan(num_categorical_fields) || is.na(num_categorical_fields) || num_categorical_fields == 0){
+          showNotification("Error - Invalid Number of Categorical Fields", type = "error", closeButton = FALSE)
+          dbRollback(metadata_connection)
           return()
         }
-      }
-      #----#
 
-      #Update field order of the source field and update the old one if necessary
-      update_query <- paste("UPDATE source_fields SET field_order = ? where field_order = ? and dataset_id = ?")
-      update_statement <- dbSendQuery(metadata_connection, update_query)
-      dbBind(update_statement, list(old_field_order, new_field_order, dataset_id))
-      dbClearResult(update_statement)
+        for(i in seq_len(num_categorical_fields)){
+          categorical_input_value_id <- paste0("updated_categorical_input_value_", i)
+          categorical_input_value <- input[[categorical_input_value_id]]
 
-      # Create a query for updating the source field
-      update_query <- paste("UPDATE source_fields
+          categorical_standardized_value_id <- paste0("updated_categorical_output_value_", i)
+          categorical_standardized_value <- input[[categorical_standardized_value_id]]
+
+          if(categorical_input_value == ""){
+            showNotification("Failed to Update Source Field - Some Categorical Inputs are Missing", type = "error", closeButton = FALSE)
+            dbRollback(metadata_connection)
+            return()
+          }
+        }
+        #----#
+
+        #Update field order of the source field and update the old one if necessary
+        update_query <- paste("UPDATE source_fields SET field_order = ? where field_order = ? and dataset_id = ?")
+        update_statement <- dbSendStatement(metadata_connection, update_query)
+        dbBind(update_statement, list(old_field_order, new_field_order, dataset_id))
+        dbClearResult(update_statement)
+
+        # Create a query for updating the source field
+        update_query <- paste("UPDATE source_fields
                               SET source_field_name = ?, field_order = ?, fixed_width_length = ?, standardizing_module_id = ?
                               WHERE source_field_id = ?")
-      update <- dbSendQuery(metadata_connection, update_query)
-      dbBind(update, list(new_source_field_name, new_field_order, new_fixed_width_length, new_standardizing_module, source_field_id_to_update))
-      dbClearResult(update)
+        update <- dbSendStatement(metadata_connection, update_query)
+        dbBind(update, list(new_source_field_name, new_field_order, new_fixed_width_length, new_standardizing_module, source_field_id_to_update))
+        dbClearResult(update)
 
-      # Create a query for deleting the records that use the same source field in
-      # other tables
-      delete_query <- paste("DELETE from compound_fields",
-                            "WHERE source_field_id = ?")
-      delete <- dbSendQuery(metadata_connection, delete_query)
-      dbBind(delete, list(source_field_id_to_update))
-      dbClearResult(delete)
+        # Create a query for deleting the records that use the same source field in
+        # other tables
+        delete_query <- paste("DELETE from compound_fields",
+                              "WHERE source_field_id = ?")
+        delete <- dbSendStatement(metadata_connection, delete_query)
+        dbBind(delete, list(source_field_id_to_update))
+        dbClearResult(delete)
 
-      delete_query <- paste("DELETE from categorical_fields",
-                            "WHERE source_field_id = ?")
-      delete <- dbSendQuery(metadata_connection, delete_query)
-      dbBind(delete, list(source_field_id_to_update))
-      dbClearResult(delete)
+        delete_query <- paste("DELETE from categorical_fields",
+                              "WHERE source_field_id = ?")
+        delete <- dbSendStatement(metadata_connection, delete_query)
+        dbBind(delete, list(source_field_id_to_update))
+        dbClearResult(delete)
 
-      delete_query <- paste("DELETE from numeric_date_fields",
-                            "WHERE source_field_id = ?")
-      delete <- dbSendQuery(metadata_connection, delete_query)
-      dbBind(delete, list(source_field_id_to_update))
-      dbClearResult(delete)
+        delete_query <- paste("DELETE from numeric_date_fields",
+                              "WHERE source_field_id = ?")
+        delete <- dbSendStatement(metadata_connection, delete_query)
+        dbBind(delete, list(source_field_id_to_update))
+        dbClearResult(delete)
 
-      delete_query <- paste("DELETE from record_priority_fields",
-                            "WHERE source_field_id = ?")
-      delete <- dbSendQuery(metadata_connection, delete_query)
-      dbBind(delete, list(source_field_id_to_update))
-      dbClearResult(delete)
+        delete_query <- paste("DELETE from record_priority_fields",
+                              "WHERE source_field_id = ?")
+        delete <- dbSendStatement(metadata_connection, delete_query)
+        dbBind(delete, list(source_field_id_to_update))
+        dbClearResult(delete)
 
-      for(i in seq_len(num_categorical_fields)){
-        categorical_input_value_id <- paste0("updated_categorical_input_value_", i)
-        categorical_input_value <- input[[categorical_input_value_id]]
+        for(i in seq_len(num_categorical_fields)){
+          categorical_input_value_id <- paste0("updated_categorical_input_value_", i)
+          categorical_input_value <- input[[categorical_input_value_id]]
 
-        categorical_standardized_value_id <- paste0("updated_categorical_output_value_", i)
-        categorical_standardized_value <- input[[categorical_standardized_value_id]]
+          categorical_standardized_value_id <- paste0("updated_categorical_output_value_", i)
+          categorical_standardized_value <- input[[categorical_standardized_value_id]]
 
-        # Create a query for inserting a new categorical field into categorical_fields
-        new_entry_query <- paste("INSERT INTO categorical_fields (source_field_id, source_value, standardized_value_id)",
-                                 "VALUES(?, ?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
-        dbBind(new_entry, list(source_field_id_to_update, categorical_input_value, categorical_standardized_value))
-        dbClearResult(new_entry)
-      }
-    }
-    else if (!is.null(new_standardizing_module) && standardizing_module_type == 4){
-
-      #Update field order of the source field and update the old one if necessary
-      update_query <- paste("UPDATE source_fields SET field_order = ? where field_order = ? and dataset_id = ?")
-      update_statement <- dbSendQuery(metadata_connection, update_query)
-      dbBind(update_statement, list(old_field_order, new_field_order, dataset_id))
-      dbClearResult(update_statement)
-
-      # Create a query for updating the source field
-      update_query <- paste("UPDATE source_fields
-                              SET source_field_name = ?, field_order = ?, fixed_width_length = ?, standardizing_module_id = ?
-                              WHERE source_field_id = ?")
-      update <- dbSendQuery(metadata_connection, update_query)
-      dbBind(update, list(new_source_field_name, new_field_order, new_fixed_width_length, new_standardizing_module, source_field_id_to_update))
-      dbClearResult(update)
-
-      # Get the input variables
-      df <- dbGetQuery(metadata_connection, 'SELECT * FROM numeric_date_formats')
-      numeric_format_id <- df[numeric_format_selected_row, "numeric_date_format_id"]
-      numeric_dest_type <- input$numeric_destination_type_new_sf
-
-      # Create a query for deleting the records that use the same source field in
-      # other tables
-      delete_query <- paste("DELETE from compound_fields",
-                            "WHERE source_field_id = ?")
-      delete <- dbSendQuery(metadata_connection, delete_query)
-      dbBind(delete, list(source_field_id_to_update))
-      dbClearResult(delete)
-
-      delete_query <- paste("DELETE from categorical_fields",
-                            "WHERE source_field_id = ?")
-      delete <- dbSendQuery(metadata_connection, delete_query)
-      dbBind(delete, list(source_field_id_to_update))
-      dbClearResult(delete)
-
-      delete_query <- paste("DELETE from numeric_date_fields",
-                            "WHERE source_field_id = ?")
-      delete <- dbSendQuery(metadata_connection, delete_query)
-      dbBind(delete, list(source_field_id_to_update))
-      dbClearResult(delete)
-
-      delete_query <- paste("DELETE from record_priority_fields",
-                            "WHERE source_field_id = ?")
-      delete <- dbSendQuery(metadata_connection, delete_query)
-      dbBind(delete, list(source_field_id_to_update))
-      dbClearResult(delete)
-
-      # Create a query for inserting a new compound field into compound_fields
-      new_entry_query <- paste("INSERT INTO numeric_date_fields (source_field_id, numeric_date_format_id, numeric_destination_type)",
-                               "VALUES(?, ?, ?);")
-      new_entry <- dbSendQuery(metadata_connection, new_entry_query)
-      dbBind(new_entry, list(source_field_id_to_update, numeric_format_id, numeric_dest_type))
-      dbClearResult(new_entry)
-    }
-    else if (!is.null(new_standardizing_module) && standardizing_module_type == 5){
-      num_categorical_fields <- input$updated_number_of_record_priority_fields
-
-      # Error handling to ensure adding a source field goes smoothly
-      #----#
-      if(is.nan(num_categorical_fields) || is.na(num_categorical_fields) || num_categorical_fields == 0){
-        showNotification("Error - Invalid Number of Record Priority Fields", type = "error", closeButton = FALSE)
-        return()
-      }
-
-      for(i in seq_len(num_categorical_fields)){
-        categorical_input_value_id <- paste0("updated_categorical_input_value_", i)
-        categorical_input_value <- input[[categorical_input_value_id]]
-
-        categorical_standardized_value_id <- paste0("updated_categorical_output_value_", i)
-        categorical_standardized_value <- input[[categorical_standardized_value_id]]
-
-        if(categorical_input_value == "" || is.na(categorical_standardized_value)){
-          showNotification("Failed to Update Source Field - Some Record Priority Inputs are Missing", type = "error", closeButton = FALSE)
-          return()
+          # Create a query for inserting a new categorical field into categorical_fields
+          new_entry_query <- paste("INSERT INTO categorical_fields (source_field_id, source_value, standardized_value_id)",
+                                   "VALUES(?, ?, ?);")
+          new_entry <- dbSendStatement(metadata_connection, new_entry_query)
+          dbBind(new_entry, list(source_field_id_to_update, categorical_input_value, categorical_standardized_value))
+          dbClearResult(new_entry)
         }
       }
-      #----#
+      else if (!is.null(new_standardizing_module) && standardizing_module_type == 4){
 
-      #Update field order of the source field and update the old one if necessary
-      update_query <- paste("UPDATE source_fields SET field_order = ? where field_order = ? and dataset_id = ?")
-      update_statement <- dbSendQuery(metadata_connection, update_query)
-      dbBind(update_statement, list(old_field_order, new_field_order, dataset_id))
-      dbClearResult(update_statement)
+        #Update field order of the source field and update the old one if necessary
+        update_query <- paste("UPDATE source_fields SET field_order = ? where field_order = ? and dataset_id = ?")
+        update_statement <- dbSendStatement(metadata_connection, update_query)
+        dbBind(update_statement, list(old_field_order, new_field_order, dataset_id))
+        dbClearResult(update_statement)
 
-      # Create a query for updating the source field
-      update_query <- paste("UPDATE source_fields
+        # Create a query for updating the source field
+        update_query <- paste("UPDATE source_fields
                               SET source_field_name = ?, field_order = ?, fixed_width_length = ?, standardizing_module_id = ?
                               WHERE source_field_id = ?")
-      update <- dbSendQuery(metadata_connection, update_query)
-      dbBind(update, list(new_source_field_name, new_field_order, new_fixed_width_length, new_standardizing_module, source_field_id_to_update))
-      dbClearResult(update)
+        update <- dbSendStatement(metadata_connection, update_query)
+        dbBind(update, list(new_source_field_name, new_field_order, new_fixed_width_length, new_standardizing_module, source_field_id_to_update))
+        dbClearResult(update)
 
-      # Create a query for deleting the records that use the same source field in
-      # other tables
-      delete_query <- paste("DELETE from compound_fields",
-                            "WHERE source_field_id = ?")
-      delete <- dbSendQuery(metadata_connection, delete_query)
-      dbBind(delete, list(source_field_id_to_update))
-      dbClearResult(delete)
+        # Get the input variables
+        df <- dbGetQuery(metadata_connection, 'SELECT * FROM numeric_date_formats')
+        numeric_format_id <- df[numeric_format_selected_row, "numeric_date_format_id"]
+        numeric_dest_type <- input$numeric_destination_type_new_sf
 
-      delete_query <- paste("DELETE from categorical_fields",
-                            "WHERE source_field_id = ?")
-      delete <- dbSendQuery(metadata_connection, delete_query)
-      dbBind(delete, list(source_field_id_to_update))
-      dbClearResult(delete)
+        # Create a query for deleting the records that use the same source field in
+        # other tables
+        delete_query <- paste("DELETE from compound_fields",
+                              "WHERE source_field_id = ?")
+        delete <- dbSendStatement(metadata_connection, delete_query)
+        dbBind(delete, list(source_field_id_to_update))
+        dbClearResult(delete)
 
-      delete_query <- paste("DELETE from numeric_date_fields",
-                            "WHERE source_field_id = ?")
-      delete <- dbSendQuery(metadata_connection, delete_query)
-      dbBind(delete, list(source_field_id_to_update))
-      dbClearResult(delete)
+        delete_query <- paste("DELETE from categorical_fields",
+                              "WHERE source_field_id = ?")
+        delete <- dbSendStatement(metadata_connection, delete_query)
+        dbBind(delete, list(source_field_id_to_update))
+        dbClearResult(delete)
 
-      delete_query <- paste("DELETE from record_priority_fields",
-                            "WHERE source_field_id = ?")
-      delete <- dbSendQuery(metadata_connection, delete_query)
-      dbBind(delete, list(source_field_id_to_update))
-      dbClearResult(delete)
+        delete_query <- paste("DELETE from numeric_date_fields",
+                              "WHERE source_field_id = ?")
+        delete <- dbSendStatement(metadata_connection, delete_query)
+        dbBind(delete, list(source_field_id_to_update))
+        dbClearResult(delete)
 
-      for(i in seq_len(num_categorical_fields)){
-        categorical_input_value_id <- paste0("updated_categorical_input_value_", i)
-        categorical_input_value <- input[[categorical_input_value_id]]
+        delete_query <- paste("DELETE from record_priority_fields",
+                              "WHERE source_field_id = ?")
+        delete <- dbSendStatement(metadata_connection, delete_query)
+        dbBind(delete, list(source_field_id_to_update))
+        dbClearResult(delete)
 
-        categorical_standardized_value_id <- paste0("updated_categorical_output_value_", i)
-        categorical_standardized_value <- input[[categorical_standardized_value_id]]
-
-        # Create a query for inserting a new categorical field into categorical_fields
-        new_entry_query <- paste("INSERT INTO record_priority_fields (source_field_id, source_value, priority)",
+        # Create a query for inserting a new compound field into compound_fields
+        new_entry_query <- paste("INSERT INTO numeric_date_fields (source_field_id, numeric_date_format_id, numeric_destination_type)",
                                  "VALUES(?, ?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
-        dbBind(new_entry, list(source_field_id_to_update, categorical_input_value, categorical_standardized_value))
+        new_entry <- dbSendStatement(metadata_connection, new_entry_query)
+        dbBind(new_entry, list(source_field_id_to_update, numeric_format_id, numeric_dest_type))
         dbClearResult(new_entry)
       }
-    }
-    else if (!is.null(new_standardizing_module)){
-      # Basic create statement that doesn't have any other tables that use the
-      # source field id in it.
+      else if (!is.null(new_standardizing_module) && standardizing_module_type == 5){
+        num_categorical_fields <- input$updated_number_of_record_priority_fields
 
-      # Create a query for deleting the records that use the same source field in
-      # other tables
-      delete_query <- paste("DELETE from compound_fields",
-                            "WHERE source_field_id = ?")
-      delete <- dbSendQuery(metadata_connection, delete_query)
-      dbBind(delete, list(source_field_id_to_update))
-      dbClearResult(delete)
+        # Error handling to ensure adding a source field goes smoothly
+        #----#
+        if(is.nan(num_categorical_fields) || is.na(num_categorical_fields) || num_categorical_fields == 0){
+          showNotification("Error - Invalid Number of Record Priority Fields", type = "error", closeButton = FALSE)
+          dbRollback(metadata_connection)
+          return()
+        }
 
-      delete_query <- paste("DELETE from categorical_fields",
-                            "WHERE source_field_id = ?")
-      delete <- dbSendQuery(metadata_connection, delete_query)
-      dbBind(delete, list(source_field_id_to_update))
-      dbClearResult(delete)
+        for(i in seq_len(num_categorical_fields)){
+          categorical_input_value_id <- paste0("updated_categorical_input_value_", i)
+          categorical_input_value <- input[[categorical_input_value_id]]
 
-      delete_query <- paste("DELETE from numeric_date_fields",
-                            "WHERE source_field_id = ?")
-      delete <- dbSendQuery(metadata_connection, delete_query)
-      dbBind(delete, list(source_field_id_to_update))
-      dbClearResult(delete)
+          categorical_standardized_value_id <- paste0("updated_categorical_output_value_", i)
+          categorical_standardized_value <- input[[categorical_standardized_value_id]]
 
-      delete_query <- paste("DELETE from record_priority_fields",
-                            "WHERE source_field_id = ?")
-      delete <- dbSendQuery(metadata_connection, delete_query)
-      dbBind(delete, list(source_field_id_to_update))
-      dbClearResult(delete)
+          if(categorical_input_value == "" || is.na(categorical_standardized_value)){
+            showNotification("Failed to Update Source Field - Some Record Priority Inputs are Missing", type = "error", closeButton = FALSE)
+            dbRollback(metadata_connection)
+            return()
+          }
+        }
+        #----#
 
-      #Update field order of the source field and update the old one if necessary
-      update_query <- paste("UPDATE source_fields SET field_order = ? where field_order = ? and dataset_id = ?")
-      update_statement <- dbSendQuery(metadata_connection, update_query)
-      dbBind(update_statement, list(old_field_order, new_field_order, dataset_id))
-      dbClearResult(update_statement)
+        #Update field order of the source field and update the old one if necessary
+        update_query <- paste("UPDATE source_fields SET field_order = ? where field_order = ? and dataset_id = ?")
+        update_statement <- dbSendStatement(metadata_connection, update_query)
+        dbBind(update_statement, list(old_field_order, new_field_order, dataset_id))
+        dbClearResult(update_statement)
 
-      # Create a query for updating the source field
-      update_query <- paste("UPDATE source_fields
+        # Create a query for updating the source field
+        update_query <- paste("UPDATE source_fields
                               SET source_field_name = ?, field_order = ?, fixed_width_length = ?, standardizing_module_id = ?
                               WHERE source_field_id = ?")
-      update <- dbSendQuery(metadata_connection, update_query)
-      dbBind(update, list(new_source_field_name, new_field_order, new_fixed_width_length, new_standardizing_module, source_field_id_to_update))
-      dbClearResult(update)
-    }
+        update <- dbSendStatement(metadata_connection, update_query)
+        dbBind(update, list(new_source_field_name, new_field_order, new_fixed_width_length, new_standardizing_module, source_field_id_to_update))
+        dbClearResult(update)
+
+        # Create a query for deleting the records that use the same source field in
+        # other tables
+        delete_query <- paste("DELETE from compound_fields",
+                              "WHERE source_field_id = ?")
+        delete <- dbSendStatement(metadata_connection, delete_query)
+        dbBind(delete, list(source_field_id_to_update))
+        dbClearResult(delete)
+
+        delete_query <- paste("DELETE from categorical_fields",
+                              "WHERE source_field_id = ?")
+        delete <- dbSendStatement(metadata_connection, delete_query)
+        dbBind(delete, list(source_field_id_to_update))
+        dbClearResult(delete)
+
+        delete_query <- paste("DELETE from numeric_date_fields",
+                              "WHERE source_field_id = ?")
+        delete <- dbSendStatement(metadata_connection, delete_query)
+        dbBind(delete, list(source_field_id_to_update))
+        dbClearResult(delete)
+
+        delete_query <- paste("DELETE from record_priority_fields",
+                              "WHERE source_field_id = ?")
+        delete <- dbSendStatement(metadata_connection, delete_query)
+        dbBind(delete, list(source_field_id_to_update))
+        dbClearResult(delete)
+
+        for(i in seq_len(num_categorical_fields)){
+          categorical_input_value_id <- paste0("updated_categorical_input_value_", i)
+          categorical_input_value <- input[[categorical_input_value_id]]
+
+          categorical_standardized_value_id <- paste0("updated_categorical_output_value_", i)
+          categorical_standardized_value <- input[[categorical_standardized_value_id]]
+
+          # Create a query for inserting a new categorical field into categorical_fields
+          new_entry_query <- paste("INSERT INTO record_priority_fields (source_field_id, source_value, priority)",
+                                   "VALUES(?, ?, ?);")
+          new_entry <- dbSendStatement(metadata_connection, new_entry_query)
+          dbBind(new_entry, list(source_field_id_to_update, categorical_input_value, categorical_standardized_value))
+          dbClearResult(new_entry)
+        }
+      }
+      else if (!is.null(new_standardizing_module)){
+        # Basic create statement that doesn't have any other tables that use the
+        # source field id in it.
+
+        # Create a query for deleting the records that use the same source field in
+        # other tables
+        delete_query <- paste("DELETE from compound_fields",
+                              "WHERE source_field_id = ?")
+        delete <- dbSendStatement(metadata_connection, delete_query)
+        dbBind(delete, list(source_field_id_to_update))
+        dbClearResult(delete)
+
+        delete_query <- paste("DELETE from categorical_fields",
+                              "WHERE source_field_id = ?")
+        delete <- dbSendStatement(metadata_connection, delete_query)
+        dbBind(delete, list(source_field_id_to_update))
+        dbClearResult(delete)
+
+        delete_query <- paste("DELETE from numeric_date_fields",
+                              "WHERE source_field_id = ?")
+        delete <- dbSendStatement(metadata_connection, delete_query)
+        dbBind(delete, list(source_field_id_to_update))
+        dbClearResult(delete)
+
+        delete_query <- paste("DELETE from record_priority_fields",
+                              "WHERE source_field_id = ?")
+        delete <- dbSendStatement(metadata_connection, delete_query)
+        dbBind(delete, list(source_field_id_to_update))
+        dbClearResult(delete)
+
+        #Update field order of the source field and update the old one if necessary
+        update_query <- paste("UPDATE source_fields SET field_order = ? where field_order = ? and dataset_id = ?")
+        update_statement <- dbSendStatement(metadata_connection, update_query)
+        dbBind(update_statement, list(old_field_order, new_field_order, dataset_id))
+        dbClearResult(update_statement)
+
+        # Create a query for updating the source field
+        update_query <- paste("UPDATE source_fields
+                              SET source_field_name = ?, field_order = ?, fixed_width_length = ?, standardizing_module_id = ?
+                              WHERE source_field_id = ?")
+        update <- dbSendStatement(metadata_connection, update_query)
+        dbBind(update, list(new_source_field_name, new_field_order, new_fixed_width_length, new_standardizing_module, source_field_id_to_update))
+        dbClearResult(update)
+      }
+
+      # End a transaction
+      dbCommit(metadata_connection)
+    },
+    error = function(e){
+      # If we throw an error because of a timeout then rollback
+      dbRollback(metadata_connection)
+    })
 
     # Re-render the data tables
     rerender_data_tables_manage_datasets()
@@ -4508,57 +4420,71 @@ dataset_server <- function(input, output, session, metadata_connection){
 
   # This runs when user confirms to deleting a source field
   observeEvent(input$delete_source_field_confirm, {
-    # Get the selected rows from the user
-    source_field_selected_row <- input$source_field_to_update_rows_selected
 
-    # Grab the source_field_id using the dataset_id
-    df <- dbGetQuery(metadata_connection, paste('SELECT * from source_fields where dataset_id =', update_source_field_ds_id,
-                                                'ORDER BY field_order ASC'))
-    source_field_id <- df[source_field_selected_row, "source_field_id"]
-    field_order     <- df[source_field_selected_row, "field_order"]
+    tryCatch({
+      # Start a transaction
+      dbBegin(metadata_connection)
 
-    # Increment the field_order of existing entries where field_order >= new_field_order
-    update_query <- paste("UPDATE source_fields SET field_order = field_order - 1 where field_order > ? AND dataset_id = ?")
-    update_statement <- dbSendQuery(metadata_connection, update_query)
-    dbBind(update_statement, list(field_order, update_source_field_ds_id))
-    dbClearResult(update_statement)
+      # Get the selected rows from the user
+      source_field_selected_row <- input$source_field_to_update_rows_selected
 
-    # Create a query for deleting the source_field
-    delete_query <- paste("DELETE from source_fields",
-                          "WHERE source_field_id = ?")
-    delete <- dbSendQuery(metadata_connection, delete_query)
-    dbBind(delete, list(source_field_id))
-    dbClearResult(delete)
+      # Grab the source_field_id using the dataset_id
+      df <- dbGetQuery(metadata_connection, paste('SELECT * from source_fields where dataset_id =', update_source_field_ds_id,
+                                                  'ORDER BY field_order ASC'))
+      source_field_id <- df[source_field_selected_row, "source_field_id"]
+      field_order     <- df[source_field_selected_row, "field_order"]
 
-    # Create a query for deleting the records that use the same source field in
-    # other tables
-    delete_query <- paste("DELETE from compound_fields",
-                          "WHERE source_field_id = ?")
-    delete <- dbSendQuery(metadata_connection, delete_query)
-    dbBind(delete, list(source_field_id))
-    dbClearResult(delete)
+      # Increment the field_order of existing entries where field_order >= new_field_order
+      update_query <- paste("UPDATE source_fields SET field_order = field_order - 1 where field_order > ? AND dataset_id = ?")
+      update_statement <- dbSendStatement(metadata_connection, update_query)
+      dbBind(update_statement, list(field_order, update_source_field_ds_id))
+      dbClearResult(update_statement)
 
-    delete_query <- paste("DELETE from categorical_fields",
-                          "WHERE source_field_id = ?")
-    delete <- dbSendQuery(metadata_connection, delete_query)
-    dbBind(delete, list(source_field_id))
-    dbClearResult(delete)
+      # Create a query for deleting the source_field
+      delete_query <- paste("DELETE from source_fields",
+                            "WHERE source_field_id = ?")
+      delete <- dbSendStatement(metadata_connection, delete_query)
+      dbBind(delete, list(source_field_id))
+      dbClearResult(delete)
 
-    delete_query <- paste("DELETE from numeric_date_fields",
-                          "WHERE source_field_id = ?")
-    delete <- dbSendQuery(metadata_connection, delete_query)
-    dbBind(delete, list(source_field_id))
-    dbClearResult(delete)
+      # Create a query for deleting the records that use the same source field in
+      # other tables
+      delete_query <- paste("DELETE from compound_fields",
+                            "WHERE source_field_id = ?")
+      delete <- dbSendStatement(metadata_connection, delete_query)
+      dbBind(delete, list(source_field_id))
+      dbClearResult(delete)
 
-    delete_query <- paste("DELETE from record_priority_fields",
-                          "WHERE source_field_id = ?")
-    delete <- dbSendQuery(metadata_connection, delete_query)
-    dbBind(delete, list(source_field_id))
-    dbClearResult(delete)
+      delete_query <- paste("DELETE from categorical_fields",
+                            "WHERE source_field_id = ?")
+      delete <- dbSendStatement(metadata_connection, delete_query)
+      dbBind(delete, list(source_field_id))
+      dbClearResult(delete)
 
-    rerender_data_tables_manage_datasets()
-    removeModal()
-    showNotification("Source Field Successfully Deleted", type = "message", closeButton = FALSE)
+      delete_query <- paste("DELETE from numeric_date_fields",
+                            "WHERE source_field_id = ?")
+      delete <- dbSendStatement(metadata_connection, delete_query)
+      dbBind(delete, list(source_field_id))
+      dbClearResult(delete)
+
+      delete_query <- paste("DELETE from record_priority_fields",
+                            "WHERE source_field_id = ?")
+      delete <- dbSendStatement(metadata_connection, delete_query)
+      dbBind(delete, list(source_field_id))
+      dbClearResult(delete)
+
+      rerender_data_tables_manage_datasets()
+      removeModal()
+      showNotification("Source Field Successfully Deleted", type = "message", closeButton = FALSE)
+
+      # Finish the transaction
+      dbCommit(metadata_connection)
+    },
+    error = function(e){
+      # Rollback the transaction
+      dbRollback(metadata_connection)
+    })
+
   })
   #----
 
@@ -4727,122 +4653,137 @@ dataset_server <- function(input, output, session, metadata_connection){
     }
     #----#
 
-    if(update_type == "Separators"){
-      for(i in seq_len(num_separators + 1)){
-        if(i <= num_separators){
-          separator_input_id <- paste0("updatable_separator_", i)
-          separator_value <- input[[separator_input_id]]
-          separators <- c(separators, separator_value)
+    tryCatch({
+      # Start a transaction
+      dbBegin(metadata_connection)
+
+      if(update_type == "Separators"){
+        for(i in seq_len(num_separators + 1)){
+          if(i <= num_separators){
+            separator_input_id <- paste0("updatable_separator_", i)
+            separator_value <- input[[separator_input_id]]
+            separators <- c(separators, separator_value)
+          }
+
+          destination_field_input_id <- paste0("updatable_separator_destination_field_", i)
+          destination_field_value <- input[[destination_field_input_id]]
+          if(destination_field_value == "null"){
+            destination_field_value <- NA
+          }
+          destination_field_ids <- c(destination_field_ids, destination_field_value)
         }
 
-        destination_field_input_id <- paste0("updatable_separator_destination_field_", i)
-        destination_field_value <- input[[destination_field_input_id]]
-        if(destination_field_value == "null"){
-          destination_field_value <- NA
+        # Error handling pt. 2
+        #----#
+        for(i in seq_along(separators)){
+          if(separators[i] == ""){
+            showNotification("Failed to Create Compound Format - Some Compound Format Inputs are Missing", type = "error", closeButton = FALSE)
+            dbRollback(metadata_connection)
+            return()
+          }
         }
-        destination_field_ids <- c(destination_field_ids, destination_field_value)
-      }
+        #----#
 
-      # Error handling pt. 2
-      #----#
-      for(i in seq_along(separators)){
-        if(separators[i] == ""){
-          showNotification("Failed to Create Compound Format - Some Compound Format Inputs are Missing", type = "error", closeButton = FALSE)
-          return()
+        # Delete all the previous separators and destinations
+        dbSendStatement(metadata_connection, paste('DELETE FROM compound_field_separators WHERE compound_field_format_id = ', selected_compound_field_format_id))
+        dbSendStatement(metadata_connection, paste('DELETE FROM compound_field_destinations WHERE compound_field_format_id = ', selected_compound_field_format_id))
+
+        # Create a query for inserting a new compound format into compound_field_formats
+        update_query <- paste("UPDATE compound_field_formats
+                            SET compound_format = ?, format_description = ?
+                            WHERE compound_field_format_id = ?")
+        update <- dbSendStatement(metadata_connection, update_query)
+        dbBind(update, list(format, format_description, selected_compound_field_format_id))
+        dbClearResult(update)
+
+        # Loop for adding the separators into the metadata
+        for(i in seq_along(separators)){
+          # Create a query for inserting a new compound separator entry into compound_field_separators
+          new_entry_query <- paste("INSERT INTO compound_field_separators (compound_field_format_id, separator_order, separator, substring_index)",
+                                   "VALUES(?, ?, ?, ?);")
+          new_entry <- dbSendStatement(metadata_connection, new_entry_query)
+          dbBind(new_entry, list(selected_compound_field_format_id, i, separators[i], NA))
+          dbClearResult(new_entry)
         }
-      }
-      #----#
 
-      # Delete all the previous separators and destinations
-      dbSendQuery(metadata_connection, paste('DELETE FROM compound_field_separators WHERE compound_field_format_id = ', selected_compound_field_format_id))
-      dbSendQuery(metadata_connection, paste('DELETE FROM compound_field_destinations WHERE compound_field_format_id = ', selected_compound_field_format_id))
-
-      # Create a query for inserting a new compound format into compound_field_formats
-      update_query <- paste("UPDATE compound_field_formats
-                          SET compound_format = ?, format_description = ?
-                          WHERE compound_field_format_id = ?")
-      update <- dbSendQuery(metadata_connection, update_query)
-      dbBind(update, list(format, format_description, selected_compound_field_format_id))
-      dbClearResult(update)
-
-      # Loop for adding the separators into the metadata
-      for(i in seq_along(separators)){
-        # Create a query for inserting a new compound separator entry into compound_field_separators
-        new_entry_query <- paste("INSERT INTO compound_field_separators (compound_field_format_id, separator_order, separator, substring_index)",
-                                 "VALUES(?, ?, ?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
-        dbBind(new_entry, list(selected_compound_field_format_id, i, separators[i], NA))
-        dbClearResult(new_entry)
-      }
-
-      # Loop for adding the compound field destinations into the metadata
-      for(i in seq_along(destination_field_ids)){
-        # Create a query for inserting a new compound separator entry into compound_field_destinations
-        new_entry_query <- paste("INSERT INTO compound_field_destinations (compound_field_format_id, destination_mapping_order, destination_field_id)",
-                                 "VALUES(?, ?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
-        dbBind(new_entry, list(selected_compound_field_format_id, i, destination_field_ids[i]))
-        dbClearResult(new_entry)
-      }
-    }
-    else{
-      for(i in seq_len(num_indexes)){
-        index_input_id <- paste0("updatable_index_", i)
-        index_value <- input[[index_input_id]]
-        indexes <- c(indexes, index_value)
-
-        destination_field_input_id <- paste0("updatable_index_destination_field_", i)
-        destination_field_value <- input[[destination_field_input_id]]
-        if(destination_field_value == "null"){
-          destination_field_value <- NA
-        }
-        destination_field_ids <- c(destination_field_ids, destination_field_value)
-      }
-
-      # Error handling pt. 2
-      #----#
-      for(i in seq_along(indexes)){
-        if(is.na(indexes[i]) || is.null(indexes[i]) || indexes[i] <= 0){
-          showNotification("Failed to Create Compound Format - Some Compound Format Inputs are Missing", type = "error", closeButton = FALSE)
-          return()
+        # Loop for adding the compound field destinations into the metadata
+        for(i in seq_along(destination_field_ids)){
+          # Create a query for inserting a new compound separator entry into compound_field_destinations
+          new_entry_query <- paste("INSERT INTO compound_field_destinations (compound_field_format_id, destination_mapping_order, destination_field_id)",
+                                   "VALUES(?, ?, ?);")
+          new_entry <- dbSendStatement(metadata_connection, new_entry_query)
+          dbBind(new_entry, list(selected_compound_field_format_id, i, destination_field_ids[i]))
+          dbClearResult(new_entry)
         }
       }
+      else{
+        for(i in seq_len(num_indexes)){
+          index_input_id <- paste0("updatable_index_", i)
+          index_value <- input[[index_input_id]]
+          indexes <- c(indexes, index_value)
 
-      #----#
+          destination_field_input_id <- paste0("updatable_index_destination_field_", i)
+          destination_field_value <- input[[destination_field_input_id]]
+          if(destination_field_value == "null"){
+            destination_field_value <- NA
+          }
+          destination_field_ids <- c(destination_field_ids, destination_field_value)
+        }
 
-      # Delete all the previous separators and destinations
-      dbSendQuery(metadata_connection, paste('DELETE FROM compound_field_separators WHERE compound_field_format_id = ', selected_compound_field_format_id))
-      dbSendQuery(metadata_connection, paste('DELETE FROM compound_field_destinations WHERE compound_field_format_id = ', selected_compound_field_format_id))
+        # Error handling pt. 2
+        #----#
+        for(i in seq_along(indexes)){
+          if(is.na(indexes[i]) || is.null(indexes[i]) || indexes[i] <= 0){
+            showNotification("Failed to Create Compound Format - Some Compound Format Inputs are Missing", type = "error", closeButton = FALSE)
+            dbRollback(metadata_connection)
+            return()
+          }
+        }
 
-      # Create a query for inserting a new compound format into compound_field_formats
-      update_query <- paste("UPDATE compound_field_formats
-                          SET compound_format = ?, format_description = ?
-                          WHERE compound_field_format_id = ?")
-      update <- dbSendQuery(metadata_connection, update_query)
-      dbBind(update, list(format, format_description, selected_compound_field_format_id))
-      dbClearResult(update)
+        #----#
+
+        # Delete all the previous separators and destinations
+        dbSendStatement(metadata_connection, paste('DELETE FROM compound_field_separators WHERE compound_field_format_id = ', selected_compound_field_format_id))
+        dbSendStatement(metadata_connection, paste('DELETE FROM compound_field_destinations WHERE compound_field_format_id = ', selected_compound_field_format_id))
+
+        # Create a query for inserting a new compound format into compound_field_formats
+        update_query <- paste("UPDATE compound_field_formats
+                            SET compound_format = ?, format_description = ?
+                            WHERE compound_field_format_id = ?")
+        update <- dbSendStatement(metadata_connection, update_query)
+        dbBind(update, list(format, format_description, selected_compound_field_format_id))
+        dbClearResult(update)
 
 
-      # Loop for adding the separators into the metadata
-      for(i in seq_along(indexes)){
-        # Create a query for inserting a new compound separator entry into compound_field_separators
-        new_entry_query <- paste("INSERT INTO compound_field_separators (compound_field_format_id, separator_order, separator, substring_index)",
-                                 "VALUES(?, ?, ?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
-        dbBind(new_entry, list(selected_compound_field_format_id, i, NA, indexes[i])) #NA for now, change it later!
-        dbClearResult(new_entry)
+        # Loop for adding the separators into the metadata
+        for(i in seq_along(indexes)){
+          # Create a query for inserting a new compound separator entry into compound_field_separators
+          new_entry_query <- paste("INSERT INTO compound_field_separators (compound_field_format_id, separator_order, separator, substring_index)",
+                                   "VALUES(?, ?, ?, ?);")
+          new_entry <- dbSendStatement(metadata_connection, new_entry_query)
+          dbBind(new_entry, list(selected_compound_field_format_id, i, NA, indexes[i])) #NA for now, change it later!
+          dbClearResult(new_entry)
+        }
+
+        # Loop for adding the compound field destinations into the metadata
+        for(i in seq_along(destination_field_ids)){
+          # Create a query for inserting a new compound separator entry into compound_field_destinations
+          new_entry_query <- paste("INSERT INTO compound_field_destinations (compound_field_format_id, destination_mapping_order, destination_field_id)",
+                                   "VALUES(?, ?, ?);")
+          new_entry <- dbSendStatement(metadata_connection, new_entry_query)
+          dbBind(new_entry, list(selected_compound_field_format_id, i, destination_field_ids[i]))
+          dbClearResult(new_entry)
+        }
       }
 
-      # Loop for adding the compound field destinations into the metadata
-      for(i in seq_along(destination_field_ids)){
-        # Create a query for inserting a new compound separator entry into compound_field_destinations
-        new_entry_query <- paste("INSERT INTO compound_field_destinations (compound_field_format_id, destination_mapping_order, destination_field_id)",
-                                 "VALUES(?, ?, ?);")
-        new_entry <- dbSendQuery(metadata_connection, new_entry_query)
-        dbBind(new_entry, list(selected_compound_field_format_id, i, destination_field_ids[i]))
-        dbClearResult(new_entry)
-      }
-    }
+      # Commit the transaction
+      dbCommit(metadata_connection)
+    },
+    error = function(e){
+      # Rollback the transaction
+      dbRollback(metadata_connection)
+    })
+
 
     # Re-render the tables
     rerender_data_tables_manage_datasets()
@@ -4935,7 +4876,6 @@ dataset_server <- function(input, output, session, metadata_connection){
       showNotification("Failed to Update Categorical Field - Some Inputs are Empty", type = "error", closeButton = FALSE)
       return()
     }
-
     #----#
 
 
@@ -4943,7 +4883,7 @@ dataset_server <- function(input, output, session, metadata_connection){
     update_query <- paste("UPDATE categorical_fields
                           SET source_value = ?, standardized_value_id = ?
                           WHERE source_field_id = ? AND source_value = ?")
-    update <- dbSendQuery(metadata_connection, update_query)
+    update <- dbSendStatement(metadata_connection, update_query)
     dbBind(update, list(new_source_categorical_value, new_standardized_categorical_value,
                         source_field_id, source_categorical_value))
     dbClearResult(update)
@@ -4987,7 +4927,7 @@ dataset_server <- function(input, output, session, metadata_connection){
     # Create a query for deleting the categorical field
     delete_query <- paste("DELETE from categorical_fields",
                           "WHERE source_field_id = ? and source_value = ?")
-    delete <- dbSendQuery(metadata_connection, delete_query)
+    delete <- dbSendStatement(metadata_connection, delete_query)
     dbBind(delete, list(source_field_id, source_value))
     dbClearResult(delete)
 
@@ -5067,7 +5007,7 @@ dataset_server <- function(input, output, session, metadata_connection){
     update_query <- paste("UPDATE numeric_date_formats
                           SET numeric_date_format_label = ?, origin_date = ?, units_label = ?
                           WHERE numeric_date_format_id = ?")
-    update <- dbSendQuery(metadata_connection, update_query)
+    update <- dbSendStatement(metadata_connection, update_query)
     dbBind(update, list(format_label, origin_date, units_label, numeric_date_format_id_to_update))
     dbClearResult(update)
 
@@ -5149,7 +5089,7 @@ dataset_server <- function(input, output, session, metadata_connection){
     update_query <- paste("UPDATE record_priority_fields
                           SET source_value = ?, priority = ?
                           WHERE source_field_id = ? AND source_value = ?")
-    update <- dbSendQuery(metadata_connection, update_query)
+    update <- dbSendStatement(metadata_connection, update_query)
     dbBind(update, list(new_source_value, new_record_priority,
                         source_field_id, source_priority_value))
     dbClearResult(update)
@@ -5192,7 +5132,7 @@ dataset_server <- function(input, output, session, metadata_connection){
     # Create a query for deleting the categorical field
     delete_query <- paste("DELETE from record_priority_fields",
                           "WHERE source_field_id = ? and source_value = ?")
-    delete <- dbSendQuery(metadata_connection, delete_query)
+    delete <- dbSendStatement(metadata_connection, delete_query)
     dbBind(delete, list(source_field_id, source_value))
     dbClearResult(delete)
 
@@ -5242,7 +5182,7 @@ dataset_server <- function(input, output, session, metadata_connection){
     update_query <- paste("UPDATE datasets
                           SET enabled_for_standardization = 0
                           WHERE dataset_id = ?")
-    update <- dbSendQuery(metadata_connection, update_query)
+    update <- dbSendStatement(metadata_connection, update_query)
     dbBind(update, list(dataset_id))
     dbClearResult(update)
 
@@ -5280,7 +5220,7 @@ dataset_server <- function(input, output, session, metadata_connection){
     update_query <- paste("UPDATE datasets
                           SET enabled_for_standardization = 1
                           WHERE dataset_id = ?")
-    update <- dbSendQuery(metadata_connection, update_query)
+    update <- dbSendStatement(metadata_connection, update_query)
     dbBind(update, list(dataset_id))
     dbClearResult(update)
 
@@ -5334,7 +5274,7 @@ dataset_server <- function(input, output, session, metadata_connection){
     # Create a query for inserting a new categorical field into categorical_fields
     new_entry_query <- paste("INSERT INTO standardizing_modules (standardizing_module_name, description, destination_field_id, output_program_data, standardizing_module_type)",
                              "VALUES(?, ?, ?, ?, ?);")
-    new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+    new_entry <- dbSendStatement(metadata_connection, new_entry_query)
     dbBind(new_entry, list(module_name, module_desc, module_dest, module_outp, 1))
     dbClearResult(new_entry)
 
@@ -5375,7 +5315,7 @@ dataset_server <- function(input, output, session, metadata_connection){
     # Create a query for inserting a new categorical field into categorical_fields
     new_entry_query <- paste("INSERT INTO destination_fields (destination_field_name, destination_field_description)",
                              "VALUES(?, ?);")
-    new_entry <- dbSendQuery(metadata_connection, new_entry_query)
+    new_entry <- dbSendStatement(metadata_connection, new_entry_query)
     dbBind(new_entry, list(destination_field_name, destination_field_desc))
     dbClearResult(new_entry)
 
