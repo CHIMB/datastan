@@ -25,7 +25,8 @@ create_standardizing_options_lookup(
   chunk_size,
   debug_mode,
   max_file_size_output,
-  read_mode
+  read_mode,
+  imputation_metadata_path
 )
 }
 \arguments{
@@ -70,6 +71,8 @@ create_standardizing_options_lookup(
 \item{max_file_size_output}{What is the max file size that a data frame can be before it isn't returned? (Options: integer in Mega-bytes)}
 
 \item{read_mode}{Read delimited data using the base file path, or using shell commands? (Options: "path", "cmd")}
+
+\item{imputation_metadata_path}{An output folder where imputation metadata will provide information on sex and postal code imputation}
 }
 \value{
 A lookup table consisting of chosen flags and the assigned default options for bad inputs or undefined choices.

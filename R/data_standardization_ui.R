@@ -414,7 +414,12 @@ data_standardization_ui <- fluidPage(
                     content = paste("Read the data using the normal file path, or use shell commands to help with processing."),
                     placement = "right", trigger = "hover",
                     options = list(container = "body"))
-      )
+      ),
+      fluidRow(
+        column(12, actionButton("choose_imputation_output", label = "Select Imputation Output Path", class = "btn-primary"), align = "center"),
+        HTML("<br><br><br>"),
+        uiOutput("imputation_output")
+      ),
     ),
     align = "center"
     ),
@@ -441,6 +446,10 @@ data_standardization_server <- function(input, output, session){
   )
 
   folder_path <- reactiveValues(
+    path=NULL
+  )
+
+  imputation_path <- reactiveValues(
     path=NULL
   )
 
@@ -480,6 +489,19 @@ data_standardization_server <- function(input, output, session){
     }
   })
 
+  observeEvent(input$choose_imputation_output,{
+    tryCatch({
+      imputation_path$path <- choose.dir()
+    },
+    error = function(e){
+      imputation_path$path <- NULL
+    })
+
+    if(is.na(imputation_path$path)){
+      imputation_path$path <- NULL
+    }
+  })
+
   observeEvent(input$choose_metadata,{
     tryCatch({
       metadata_path$path <- file.choose()
@@ -503,6 +525,7 @@ data_standardization_server <- function(input, output, session){
     chosen_gender_file <- gender_file_path$path
     chosen_folder <- folder_path$path
     chosen_metadata <- metadata_path$path
+    imputation_output <- imputation_path$path
 
     #Input File
     if(is.null(chosen_file)){
@@ -537,6 +560,18 @@ data_standardization_server <- function(input, output, session){
     else{
       output$chosen_folder <- renderUI({
         column(12, HTML(paste("<b>Folder Selected:</b>", basename(folder_path$path))), align = "center")
+      })
+    }
+
+    # Folder
+    if(is.null(imputation_output)){
+      output$imputation_output <- renderUI({
+        column(12, HTML("No Folder Chosen"), align = "center")
+      })
+    }
+    else{
+      output$imputation_output <- renderUI({
+        column(12, HTML(paste("<b>Folder Selected:</b>", basename(imputation_path$path))), align = "center")
       })
     }
 
@@ -589,6 +624,9 @@ data_standardization_server <- function(input, output, session){
     # Get the metadata file
     chosen_metadata <- metadata_path$path
 
+    # Get the imputation metadata output path
+    imputation_metadata_path <- imputation_path$path
+
     #----# Error Handling
     if(is.null(input_file)){
       showNotification("Failed to Standardize Dataset - Missing Input File", type = "error", closeButton = FALSE)
@@ -600,6 +638,10 @@ data_standardization_server <- function(input, output, session){
       showNotification("Failed to Standardize Dataset - Custom Sex Imputation File is Missing", type = "error", closeButton = FALSE)
       enable("standardize_data")
       return()
+    }
+
+    if(is.null(imputation_metadata_path)){
+      imputation_metadata_path <- "null"
     }
 
     if(is.null(chosen_folder)){
@@ -630,11 +672,11 @@ data_standardization_server <- function(input, output, session){
       flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names",
                     "impute_sex", "impute_sex_type", "chosen_sex_file",
                     "compress_location_whitespace", "remove_location_punctuation", "convert_location_case", "convert_location_to_ascii", "extract_postal_code",
-                    "file_output", "output_non_linkage_fields", "chunk_size", "read_mode"),
+                    "file_output", "output_non_linkage_fields", "chunk_size", "read_mode", "imputation_metadata_path"),
       flag_value = c(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace, list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names,
                      impute_gender, impute_gender_type, chosen_gender_file,
                      compress_location_whitespace, remove_location_punctuation, convert_location_case, convert_location_to_ascii, extract_postal_codes,
-                     file_output,output_non_linkage_fields, chunking_size, read_mode)
+                     file_output,output_non_linkage_fields, chunking_size, read_mode, imputation_metadata_path)
     )
     #print(flag_values)
     flag_lookup <- setNames(flag_values$flag_value, flag_values$flag_code)

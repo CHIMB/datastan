@@ -218,64 +218,20 @@ impute_sex <- function(source_df, processed_names, processed_sexes, flag_lookup_
     majority_sex <- sex_summary[indicies_list, "sex"]
 
     # Step 3: Un-list the sexes
-    processed_sexes[na_indices] <- unlist(majority_sex)
+    imputed_sexes <- vector(mode = "character", length = length(processed_sexes))
+    imputed_sexes[na_indices] <- unlist(majority_sex)
 
     # Step 4: Add the imputed sex to a new column
-    source_df[["imputed_sex"]] <- paste(processed_sexes)
+    source_df[["imputed_sex"]] <- paste(imputed_sexes)
     source_df[["imputed_sex"]] <- trimws(source_df[["imputed_sex"]])
 
     # Remove the sex summary data frame
     rm(sex_summary)
     gc()
-
-    return(source_df)
-
-    # if(is.null(processed_sexes))
-    #   temporary_sex_imputation_df <- data.frame(names = processed_names, sex = NA)
-    # else
-    #   temporary_sex_imputation_df <- data.frame(names = processed_names, sex = processed_sexes)
-    #
-    # names_to_impute <- temporary_sex_imputation_df[is.na(temporary_sex_imputation_df$sex), ]$names
-    #
-    # # Sample data
-    # df0 <- data.frame(v1 = names_to_impute, stringsAsFactors = FALSE)
-    #
-    # # Add an index column
-    # df0$index <- seq_len(nrow(df0))
-    #
-    # # Rename column in df0
-    # colnames(df0) <- c("name", "index")
-    #
-    # # Merge
-    # df1 <- merge(df0, gender(unique(df0$name)), by = "name", all.x = TRUE)
-    #
-    # # Sort by index
-    # df1 <- df1[order(df1$index), ]
-    #
-    # # Remove the index column if needed
-    # df1 <- df1[, -which(names(df1) == "index")]
-    #
-    # temporary_sex_imputation_df$sex[is.na(temporary_sex_imputation_df$sex)] <- df1$gender
-    # temporary_sex_imputation_df$sex <- str_replace_all(temporary_sex_imputation_df$sex, "female", "F")
-    # temporary_sex_imputation_df$sex <- str_replace_all(temporary_sex_imputation_df$sex, "male", "M")
-    #
-    # source_df[["imputed_sex"]] <- paste(source_df[["imputed_sex"]], temporary_sex_imputation_df$sex, sep = " ")
-    # source_df[is.na(source_df)] <- ""
-    # source_df[["imputed_sex"]] <- trimws(source_df[["imputed_sex"]])
-    #
-    # return(source_df)
   }
   else if (imputation_type == "custom"){
     sex_imputation_file <- flag_lookup_table[["chosen_sex_file"]]
     sex_infer_df <- fread(sex_imputation_file)
-
-    # # Group by name and calculate the majority gender for each name
-    # sex_summary <- sex_infer_df %>%
-    #   group_by(primary_given_name) %>%
-    #   summarise(sex = names(which.max(table(sex))))
-
-    # # Remove the initial sex imputation data frame
-    # rm(sex_infer_df)
 
     # Filter out names with NA genders
     na_indices <- which(is.na(processed_sexes) | processed_sexes == "NA" | processed_sexes == "")
@@ -287,17 +243,16 @@ impute_sex <- function(source_df, processed_names, processed_sexes, flag_lookup_
     majority_sex <- sex_infer_df[indicies_list, "sex"]
 
     # Step 3: Un-list the sexes
-    processed_sexes[na_indices] <- unlist(majority_sex)
+    imputed_sexes <- vector(mode = "character", length = length(processed_sexes))
+    imputed_sexes[na_indices] <- unlist(majority_sex)
 
     # Step 4: Add the imputed sex to a new column
-    source_df[["imputed_sex"]] <- paste(processed_sexes)
+    source_df[["imputed_sex"]] <- paste(imputed_sexes)
     source_df[["imputed_sex"]] <- trimws(source_df[["imputed_sex"]])
 
     # Remove the sex summary data frame
     rm(sex_infer_df)
     gc()
-
-    return(source_df)
   }
   else if (imputation_type == "internal"){
     # Create a sex imputation data frame out of the processed names and sexes
@@ -326,18 +281,19 @@ impute_sex <- function(source_df, processed_names, processed_sexes, flag_lookup_
     majority_sex <- sex_summary[indicies_list, "sex"]
 
     # Step 3: Un-list the sexes
-    processed_sexes[na_indices] <- unlist(majority_sex)
+    imputed_sexes <- vector(mode = "character", length = length(processed_sexes))
+    imputed_sexes[na_indices] <- unlist(majority_sex)
 
     # Step 4: Add the imputed sex to a new column
-    source_df[["imputed_sex"]] <- paste(processed_sexes)
+    source_df[["imputed_sex"]] <- paste(imputed_sexes)
     source_df[["imputed_sex"]] <- trimws(source_df[["imputed_sex"]])
 
     # Remove the sex summary data frame
     rm(sex_summary)
     gc()
-
-    return(source_df)
   }
+
+  return(source_df)
 
 }
 
@@ -517,6 +473,7 @@ compile_non_linkage_data <- function(source_data_frame, db_conn, dataset_id){
 #' @param debug_mode Print additional information to the console in case of potential bugs? (Options: "on", "off")
 #' @param max_file_size_output What is the max file size that a data frame can be before it isn't returned? (Options: integer in Mega-bytes)
 #' @param read_mode Read delimited data using the base file path, or using shell commands? (Options: "path", "cmd")
+#' @param imputation_metadata_path An output folder where imputation metadata will provide information on sex and postal code imputation
 #' @return A lookup table consisting of chosen flags and the assigned default options for bad inputs or undefined choices.
 #' @examples
 #' flags <- create_standardizing_options_lookup(convert_name_case = "upper", impute_sex = "yes", chunk_size = 15000, max_file_size_output = 200)
@@ -525,7 +482,8 @@ create_standardizing_options_lookup <- function(convert_name_case, convert_name_
                                                 list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names,
                                                 impute_sex, impute_sex_type, chosen_sex_file,
                                                 compress_location_whitespace, remove_location_punctuation, convert_location_case, convert_location_to_ascii, extract_postal_code,
-                                                file_output, output_non_linkage_fields, chunk_size, debug_mode, max_file_size_output, read_mode){
+                                                file_output, output_non_linkage_fields, chunk_size, debug_mode, max_file_size_output, read_mode,
+                                                imputation_metadata_path){
 
   # NAMES
   #----------------------------------------------------------------------------#
@@ -622,16 +580,19 @@ create_standardizing_options_lookup <- function(convert_name_case, convert_name_
     read_mode <- "path"
   #----------------------------------------------------------------------------#
 
+  if(missing(imputation_metadata_path) || !dir.exists(imputation_metadata_path))
+    imputation_metadata_path <- "null"
+
   # Construct the flag lookup tables for standardization [Set this to be in a single source file]
   flag_values <- data.frame(
     flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names",
                   "impute_sex", "impute_sex_type", "chosen_sex_file",
                   "compress_location_whitespace", "remove_location_punctuation", "convert_location_case", "convert_location_to_ascii", "extract_postal_code",
-                  "file_output","output_non_linkage_fields", "chunk_size", "max_file_size_output", "debug_mode", "read_mode"),
+                  "file_output","output_non_linkage_fields", "chunk_size", "max_file_size_output", "debug_mode", "read_mode", "imputation_metadata_path"),
     flag_value = c(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace, list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names,
                    impute_sex, impute_sex_type, chosen_sex_file,
                    compress_location_whitespace, remove_location_punctuation, convert_location_case, convert_location_to_ascii, extract_postal_code,
-                   file_output, output_non_linkage_fields, chunk_size, max_file_size_output, debug_mode, read_mode)
+                   file_output, output_non_linkage_fields, chunk_size, max_file_size_output, debug_mode, read_mode, imputation_metadata_path)
   )
 
   # Create the lookup table
