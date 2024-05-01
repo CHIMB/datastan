@@ -1507,7 +1507,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             imputed_sex_values_male <- sum(processed_data_frame[["imputed_sex"]] == "M")
 
             # Step 4: Determine % assigned
-            percentage_assigned_male <- paste0(round((imputed_sex_values_male/total_sex_count) * 100, 10), "%")
+            percentage_assigned_male <- round((imputed_sex_values_male/total_sex_count) * 100, 10)
 
             # Step 5: Create a row in the data frame
             sex_imputation_row_male <- c("sex", "male", total_sex_count, NA, NA, imputed_sex_values_male, NA, percentage_assigned_male)
@@ -1526,7 +1526,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             imputed_sex_values_female <- sum(processed_data_frame[["imputed_sex"]] == "F")
 
             # Step 4: Determine % assigned
-            percentage_assigned_female <- paste0(round((imputed_sex_values_female/total_sex_count) * 100, 10), "%")
+            percentage_assigned_female <- round((imputed_sex_values_female/total_sex_count) * 100, 10)
 
             # Step 5: Create a row in the data frame
             sex_imputation_row_female <- c("sex", "female", total_sex_count, NA, NA, imputed_sex_values_female, NA, percentage_assigned_female)
@@ -1547,10 +1547,10 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             percent_missing_sex_values_assigned <- paste0(round((imputed_sex_values_all/missing_sex_values) * 100, 10), "%")
 
             # Step 4: Determine % assigned
-            percentage_assigned_all <- paste0(round((imputed_sex_values_all/total_sex_count) * 100, 10), "%")
+            percentage_assigned_all <- round((imputed_sex_values_all/total_sex_count) * 100, 10)
 
             # Step 5: Create a row in the data frame
-            sex_imputation_row_all <- c("sex", "total", total_sex_count, missing_sex_values, percent_missing_sex_values,
+            sex_imputation_row_all <- c("sex", "overall", total_sex_count, missing_sex_values, percent_missing_sex_values,
                                         imputed_sex_values_all, percent_missing_sex_values_assigned, percentage_assigned_all)
 
             #-- Create the data frame to write to the file --#
@@ -1594,7 +1594,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             imputed_sex_values_male <- sum(processed_data_frame[["imputed_sex"]] == "M") + current_num_assigned
 
             # Step 3: Determine % assigned
-            percentage_assigned_male <- paste0(round((imputed_sex_values_male/total_sex_count) * 100, 10), "%")
+            percentage_assigned_male <- round((imputed_sex_values_male/total_sex_count) * 100, 10)
 
             # Step 4: Update the values in that row and overwrite the file
             imputation_metadata$total_count[row_index] <- total_sex_count
@@ -1618,7 +1618,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             imputed_sex_values_female <- sum(processed_data_frame[["imputed_sex"]] == "F") + current_num_assigned
 
             # Step 3: Determine % assigned
-            percentage_assigned_female <- paste0(round((imputed_sex_values_female/total_sex_count) * 100, 10), "%")
+            percentage_assigned_female <- round((imputed_sex_values_female/total_sex_count) * 100, 10)
 
             # Step 4: Update the values in that row and overwrite the file
             imputation_metadata$total_count[row_index] <- total_sex_count
@@ -1627,7 +1627,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
             #-- Create a row in the data frame for ALL imputed sex values --#
             # Find the row corresponding to "sex" and "total"
-            row_index <- which(imputation_metadata$field_name == "sex" & imputation_metadata$value_assigned == "total")
+            row_index <- which(imputation_metadata$field_name == "sex" & imputation_metadata$value_assigned == "overall")
 
             # Get the current values from the metadata file
             current_total_count <- imputation_metadata$total_count[row_index]
@@ -1642,14 +1642,14 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             # Step 2: Discern how many are missing
             processed_sexes <- processed_data_frame[[gender_col]]
             missing_sex_values <- sum(is.na(processed_sexes) | processed_sexes == "NA" | processed_sexes == "") + current_num_missing
-            percent_missing_sex_values <- paste0(round((missing_sex_values/total_sex_count) * 100, 10), "%")
+            percent_missing_sex_values <- round((missing_sex_values/total_sex_count) * 100, 10)
 
             # Step 3: Discern how many imputed sex values were men
             imputed_sex_values_all <- sum(processed_data_frame[["imputed_sex"]] == "F" | processed_data_frame[["imputed_sex"]] == "M") + current_num_assigned
-            percent_missing_sex_values_assigned <- paste0(round((imputed_sex_values_all/missing_sex_values) * 100, 10), "%")
+            percent_missing_sex_values_assigned <- round((imputed_sex_values_all/missing_sex_values) * 100, 10)
 
             # Step 4: Determine % assigned
-            percentage_assigned_all <- paste0(round((imputed_sex_values_all/total_sex_count) * 100, 10), "%")
+            percentage_assigned_all <- round((imputed_sex_values_all/total_sex_count) * 100, 10)
 
             # Step 5: Update the values in that row and overwrite the file
             imputation_metadata$total_count[row_index] <- total_sex_count
@@ -1683,17 +1683,17 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             else{
               missing_postal_codes <- total_postal_code_count
             }
-            percent_missing_postal_codes <- paste0(round((missing_postal_codes/total_postal_code_count) * 100, 10), "%")
+            percent_missing_postal_codes <- round((missing_postal_codes/total_postal_code_count) * 100, 10)
 
             # Step 3: Discern how many imputed sex values were men
             imputed_postal_codes <- sum(!is.na(processed_data_frame[["alt_postal_code"]]) & (processed_data_frame[["alt_postal_code"]] != "" | processed_data_frame[["alt_postal_code"]] == " "))
-            percent_missing_postal_codes_assigned <- paste0(round((imputed_postal_codes/missing_postal_codes) * 100, 10), "%")
+            percent_missing_postal_codes_assigned <- round((imputed_postal_codes/missing_postal_codes) * 100, 10)
 
             # Step 4: Determine % assigned
-            percentage_assigned_all <- paste0(round((imputed_postal_codes/total_postal_code_count) * 100, 10), "%")
+            percentage_assigned_all <- round((imputed_postal_codes/total_postal_code_count) * 100, 10)
 
             # Step 5: Create a row in the data frame
-            imputed_postal_code_row <- c("postal_code", "total", total_postal_code_count, missing_postal_codes,
+            imputed_postal_code_row <- c("postal_code", "overall", total_postal_code_count, missing_postal_codes,
                                          percent_missing_postal_codes, imputed_postal_codes, percent_missing_postal_codes_assigned, percentage_assigned_all)
 
             #-- Create the data frame to write to the file --#
@@ -1720,7 +1720,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             imputation_metadata <- fread(metadata_file)
 
             # Find the row corresponding to "postal_code" and "total"
-            row_index <- which(imputation_metadata$field_name == "postal_code" & imputation_metadata$value_assigned == "total")
+            row_index <- which(imputation_metadata$field_name == "postal_code" & imputation_metadata$value_assigned == "overall")
             
             if(!identical(row_index, integer(0))){
               # Get the current values from the metadata file
@@ -1740,7 +1740,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
               else{
                 missing_postal_codes <- nrow(processed_data_frame) + current_num_missing
               }
-              percent_missing_postal_codes <- paste0(round((missing_postal_codes/total_postal_code_count) * 100, 10), "%")
+              percent_missing_postal_codes <- round((missing_postal_codes/total_postal_code_count) * 100, 10)
 
               # Step 3: Discern how many imputed sex values were men
               imputed_postal_codes <- sum(!is.na(processed_data_frame[["alt_postal_code"]]) & (processed_data_frame[["alt_postal_code"]] != "" | processed_data_frame[["alt_postal_code"]] == " ")) + current_num_assigned
@@ -1771,24 +1771,24 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
               else{
                 missing_postal_codes <- total_postal_code_count
               }
-              percent_missing_postal_codes <- paste0(round((missing_postal_codes/total_postal_code_count) * 100, 10), "%")
+              percent_missing_postal_codes <- round((missing_postal_codes/total_postal_code_count) * 100, 10)
 
               # Step 3: Discern how many imputed sex values were men
               imputed_postal_codes <- sum(!is.na(processed_data_frame[["alt_postal_code"]]) & (processed_data_frame[["alt_postal_code"]] != "" | processed_data_frame[["alt_postal_code"]] == " "))
-              percent_missing_postal_codes_assigned <- paste0(round((imputed_postal_codes/missing_postal_codes) * 100, 10), "%")
+              percent_missing_postal_codes_assigned <- round((imputed_postal_codes/missing_postal_codes) * 100, 10)
 
               # Step 4: Determine % assigned
-              percentage_assigned_all <- paste0(round((imputed_postal_codes/total_postal_code_count) * 100, 10), "%")
+              percentage_assigned_all <- round((imputed_postal_codes/total_postal_code_count) * 100, 10)
 
               # Step 5: Create a row in the data frame
-              imputed_postal_code_row <- c("postal_code", "total", total_postal_code_count, missing_postal_codes,
+              imputed_postal_code_row <- c("postal_code", "overall", total_postal_code_count, missing_postal_codes,
                                            percent_missing_postal_codes, imputed_postal_codes, percent_missing_postal_codes_assigned, percentage_assigned_all)
               
 
               #-- Create the data frame to write to the file --#
               imputation_df <- data.frame(
                 field_name = "postal_code",            
-                value_assigned = "total",       
+                value_assigned = "overall",       
                 total_count = total_postal_code_count,             
                 num_missing = missing_postal_codes,             
                 pct_missing = percent_missing_postal_codes,           
