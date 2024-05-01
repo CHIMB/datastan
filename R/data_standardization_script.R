@@ -1540,11 +1540,11 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             # Step 2: Discern how many are missing
             processed_sexes <- processed_data_frame[[gender_col]]
             missing_sex_values <- sum(is.na(processed_sexes) | processed_sexes == "NA" | processed_sexes == "")
-            percent_missing_sex_values <- paste0(round((missing_sex_values/total_sex_count) * 100, 10), "%")
+            percent_missing_sex_values <- round((missing_sex_values/total_sex_count) * 100, 10)
 
             # Step 3: Discern how many imputed sex values were men or women
             imputed_sex_values_all <- sum(processed_data_frame[["imputed_sex"]] == "F" | processed_data_frame[["imputed_sex"]] == "M")
-            percent_missing_sex_values_assigned <- paste0(round((imputed_sex_values_all/missing_sex_values) * 100, 10), "%")
+            percent_missing_sex_values_assigned <- round((imputed_sex_values_all/missing_sex_values) * 100, 10)
 
             # Step 4: Determine % assigned
             percentage_assigned_all <- round((imputed_sex_values_all/total_sex_count) * 100, 10)
