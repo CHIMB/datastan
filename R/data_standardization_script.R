@@ -1744,10 +1744,10 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
               # Step 3: Discern how many imputed sex values were men
               imputed_postal_codes <- sum(!is.na(processed_data_frame[["alt_postal_code"]]) & (processed_data_frame[["alt_postal_code"]] != "" | processed_data_frame[["alt_postal_code"]] == " ")) + current_num_assigned
-              percent_missing_postal_codes_assigned <- paste0(round((imputed_postal_codes/missing_postal_codes) * 100, 10), "%")
+              percent_missing_postal_codes_assigned <- round((imputed_postal_codes/missing_postal_codes) * 100, 10)
 
               # Step 4: Determine % assigned
-              percentage_assigned_all <- paste0(round((imputed_postal_codes/total_postal_code_count) * 100, 10), "%")
+              percentage_assigned_all <- round((imputed_postal_codes/total_postal_code_count) * 100, 10)
 
               # Step 5: Update the values in that row and overwrite the file
               imputation_metadata$total_count[row_index] <- total_postal_code_count
