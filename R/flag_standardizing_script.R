@@ -24,7 +24,7 @@ standardize_names <- function(input_names, flag_lookup_table){
     curr_names <- stri_replace_all_regex(curr_names, reg_exp, "")
 
     # Set back to title case afterwards
-    curr_names <- toTitleCase(curr_names)
+    curr_names <- str_to_title(curr_names)
   }
 
   #-- Second - Remove any punctuation: --#
