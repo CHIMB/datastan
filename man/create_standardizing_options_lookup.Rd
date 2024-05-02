@@ -73,6 +73,8 @@ create_standardizing_options_lookup(
 \item{read_mode}{Read delimited data using the base file path, or using shell commands? (Options: "path", "cmd")}
 
 \item{imputation_metadata_path}{An output folder where imputation metadata will provide information on sex and postal code imputation}
+
+\item{remove_titles_and_suffix}{Replace any titles or suffix with an empty string symbol. (Options: "yes", "no")}
 }
 \value{
 A lookup table consisting of chosen flags and the assigned default options for bad inputs or undefined choices.

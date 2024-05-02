@@ -1658,7 +1658,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
             imputation_metadata$num_assigned[row_index] <- imputed_sex_values_all
             imputation_metadata$missing_pct_assigned[row_index] <- percent_missing_sex_values_assigned
             imputation_metadata$total_pct_assigned[row_index] <- percentage_assigned_all
-            
+
             fwrite(imputation_metadata, file = metadata_file)
           }
         }
@@ -1721,7 +1721,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
 
             # Find the row corresponding to "postal_code" and "total"
             row_index <- which(imputation_metadata$field_name == "postal_code" & imputation_metadata$value_assigned == "overall")
-            
+
             if(!identical(row_index, integer(0))){
               # Get the current values from the metadata file
               current_total_count <- imputation_metadata$total_count[row_index]
@@ -1783,20 +1783,20 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
               # Step 5: Create a row in the data frame
               imputed_postal_code_row <- c("postal_code", "overall", total_postal_code_count, missing_postal_codes,
                                            percent_missing_postal_codes, imputed_postal_codes, percent_missing_postal_codes_assigned, percentage_assigned_all)
-              
+
 
               #-- Create the data frame to write to the file --#
               imputation_df <- data.frame(
-                field_name = "postal_code",            
-                value_assigned = "overall",       
-                total_count = total_postal_code_count,             
-                num_missing = missing_postal_codes,             
-                pct_missing = percent_missing_postal_codes,           
-                num_assigned = imputed_postal_codes,            
-                missing_pct_assigned = percent_missing_postal_codes_assigned,  
-                total_pct_assigned = percentage_assigned_all     
+                field_name = "postal_code",
+                value_assigned = "overall",
+                total_count = total_postal_code_count,
+                num_missing = missing_postal_codes,
+                pct_missing = percent_missing_postal_codes,
+                num_assigned = imputed_postal_codes,
+                missing_pct_assigned = percent_missing_postal_codes_assigned,
+                total_pct_assigned = percentage_assigned_all
               )
-              
+
               # Bind the rows
               imputation_metadata = rbind(imputation_metadata, imputation_df)
 
@@ -2770,11 +2770,11 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
   #----
   # Construct the flag lookup tables for standardization
   flag_values <- data.frame(
-    flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names",
+    flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names", "remove_titles_and_suffix",
                   "impute_sex", "impute_sex_type", "chosen_sex_file",
                   "compress_location_whitespace", "remove_location_punctuation", "convert_location_case", "convert_location_to_ascii", "extract_postal_code",
                   "file_output", "output_non_linkage_fields", "chunk_size", "max_file_size_output", "debug_mode", "read_mode", "imputation_metadata_path"),
-    flag_value = c("original", "no", "no", "no", "no", "no", "no",
+    flag_value = c("original", "no", "no", "no", "no", "no", "no", "no",
                    "no", "none", "null",
                    "no", "no", "original", "no", "no",
                    "sqlite", "no", 100000, "null", "off", "path", "null")

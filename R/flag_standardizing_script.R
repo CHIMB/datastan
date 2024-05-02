@@ -13,25 +13,39 @@ standardize_names <- function(input_names, flag_lookup_table){
 
   curr_names <- input_names
 
-  #-- First - Remove any punctuation: --#
+  #-- First - Remove any titles or suffix from a persons name
+  remove_titles_and_suffix_value <- flag_lookup_table["remove_titles_and_suffix"]
+  if(remove_titles_and_suffix_value == "yes"){
+    # First set the names to lower case for matching the regular expression
+    curr_names <- tolower(curr_names)
+
+    # Create a regular expression, then replace all occurences with a blank space
+    reg_exp <- "\\s*\\b(?:mr|jr|sr|dr|ms|iv|iii|ii|i|mrs|esq|hon|prof|st|madam|mister|sir|lord)\\b\\s*"
+    curr_names <- stri_replace_all_regex(curr_names, reg_exp, "")
+
+    # Set back to title case afterwards
+    curr_names <- toTitleCase(curr_names)
+  }
+
+  #-- Second - Remove any punctuation: --#
   remove_name_punctuation_value <- flag_lookup_table["remove_name_punctuation"]
   if(remove_name_punctuation_value == "yes"){
     curr_names <- stri_replace_all_regex(curr_names, "[-.'[:punct:]]+", " ")
   }
 
-  #-- Second - Remove any white space: --#
+  #-- Third - Remove any white space: --#
   compress_name_whitespace_value <- flag_lookup_table["compress_name_whitespace"]
   if(compress_name_whitespace_value == "yes"){
     curr_names <- stri_replace_all_regex(curr_names, " ", "")
   }
 
-  #-- Third - Remove accents or diacritics from names: --#
+  #-- Fourth - Remove accents or diacritics from names: --#
   convert_to_ascii_value <- flag_lookup_table["convert_name_to_ascii"]
   if(convert_to_ascii_value == "yes"){
     curr_names <- stri_trans_general(curr_names, "Latin-ASCII")
   }
 
-  #-- Fourth - Convert name case using flag value --#
+  #-- Fifth - Convert name case using flag value --#
   convert_case_value <- flag_lookup_table["convert_name_case"]
   if(convert_case_value == "upper"){
     curr_names <- stri_trans_toupper(curr_names)
@@ -39,6 +53,9 @@ standardize_names <- function(input_names, flag_lookup_table){
   else if (convert_case_value == "lower"){
     curr_names <- stri_trans_tolower(curr_names)
   }
+
+  # Trim the current name trailing and leading white space before returning
+  curr_names <- trimws(curr_names)
 
   return(curr_names)
 }
@@ -456,6 +473,7 @@ compile_non_linkage_data <- function(source_data_frame, db_conn, dataset_id){
 #' @param convert_name_to_ascii Remove diacritics of a person's name. (Options: "yes", "no")
 #' @param remove_name_punctuation Remove any symbols or punctuation from a person's name. (Options: "yes", "no")
 #' @param compress_name_whitespace Replace name white space with an empty string symbol. (Options: "yes", "no")
+#' @param remove_titles_and_suffix Replace any titles or suffix with an empty string symbol. (Options: "yes", "no")
 #' @param list_all_curr_given_names Combine all given names of a person into an additional column. (Options: "yes", "no")
 #' @param list_all_curr_surnames Combine all surnames of a person into an additional column. (Options: "yes", "no")
 #' @param list_all_curr_names Combine all names of a person into an additional column. (Options: "yes", "no")
@@ -478,7 +496,7 @@ compile_non_linkage_data <- function(source_data_frame, db_conn, dataset_id){
 #' @examples
 #' flags <- create_standardizing_options_lookup(convert_name_case = "upper", impute_sex = "yes", chunk_size = 15000, max_file_size_output = 200)
 #' @export
-create_standardizing_options_lookup <- function(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace,
+create_standardizing_options_lookup <- function(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace, remove_titles_and_suffix,
                                                 list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names,
                                                 impute_sex, impute_sex_type, chosen_sex_file,
                                                 compress_location_whitespace, remove_location_punctuation, convert_location_case, convert_location_to_ascii, extract_postal_code,
@@ -502,6 +520,10 @@ create_standardizing_options_lookup <- function(convert_name_case, convert_name_
   # Compress Name White space
   if(missing(compress_name_whitespace) || (compress_name_whitespace != "yes" && compress_name_whitespace != "no"))
     compress_name_whitespace <- "no"
+
+  # Remove titles or suffix
+  if(missing(remove_titles_and_suffix) || (remove_titles_and_suffix != "yes" && remove_titles_and_suffix != "no"))
+    remove_titles_and_suffix <- "no"
 
   # List Given Names
   if(missing(list_all_curr_given_names) || (list_all_curr_given_names != "upper" && list_all_curr_given_names != "lower"))
@@ -585,11 +607,11 @@ create_standardizing_options_lookup <- function(convert_name_case, convert_name_
 
   # Construct the flag lookup tables for standardization [Set this to be in a single source file]
   flag_values <- data.frame(
-    flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names",
+    flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names", "remove_titles_and_suffix",
                   "impute_sex", "impute_sex_type", "chosen_sex_file",
                   "compress_location_whitespace", "remove_location_punctuation", "convert_location_case", "convert_location_to_ascii", "extract_postal_code",
                   "file_output","output_non_linkage_fields", "chunk_size", "max_file_size_output", "debug_mode", "read_mode", "imputation_metadata_path"),
-    flag_value = c(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace, list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names,
+    flag_value = c(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace, list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names, remove_titles_and_suffix,
                    impute_sex, impute_sex_type, chosen_sex_file,
                    compress_location_whitespace, remove_location_punctuation, convert_location_case, convert_location_to_ascii, extract_postal_code,
                    file_output, output_non_linkage_fields, chunk_size, max_file_size_output, debug_mode, read_mode, imputation_metadata_path)

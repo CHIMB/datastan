@@ -158,6 +158,18 @@ data_standardization_ui <- fluidPage(
                       placement = "right", trigger = "hover",
                       options = list(container = "body"))
         ),
+      div(style = "display: flex; justify-content: center; align-items: center;",
+          selectInput("remove_titles_and_suffix", label = "Should Titles or Suffix like Dr, Mr, Ms, Jr, Sr, III be removed?",
+                      choices = list("Yes" = "yes",
+                                     "No" = "no"),
+                      selected = "no", width = validateCssUnit(600)),
+          bsButton("remove_titles_and_suffix_help", label = "", icon = icon("question"), style = "info"),
+          bsPopover(id = "remove_titles_and_suffix_help", title = "Remove Titles and Suffix - Help",
+                    content = paste("Remove titles or suffix will replace them with an empty string <b>(Dr John Doe --> John Doe</b>.",
+                                    "Or it will leave the names as is."),
+                    placement = "right", trigger = "hover",
+                    options = list(container = "body"))
+      ),
         div(style = "display: flex; justify-content: center; align-items: center;",
             selectInput("remove_name_punctuation", label = "Remove Punctuation From Names?",
                         choices = list("Yes" = "yes",
@@ -596,6 +608,7 @@ data_standardization_server <- function(input, output, session){
     convert_name_to_ascii <- input$convert_name_to_ascii
     remove_name_punctuation <- input$remove_name_punctuation
     compress_name_whitespace <- input$compress_name_whitespace
+    remove_titles_and_suffix <- input$remove_titles_and_suffix
     list_all_curr_given_names <- input$list_all_curr_given_names
     list_all_curr_surnames <- input$list_all_curr_surnames
     list_all_curr_names <- input$list_all_curr_names
@@ -669,11 +682,11 @@ data_standardization_server <- function(input, output, session){
 
     # Construct the flag lookup tables for standardization
     flag_values <- data.frame(
-      flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names",
+      flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names", "remove_titles_and_suffix",
                     "impute_sex", "impute_sex_type", "chosen_sex_file",
                     "compress_location_whitespace", "remove_location_punctuation", "convert_location_case", "convert_location_to_ascii", "extract_postal_code",
                     "file_output", "output_non_linkage_fields", "chunk_size", "read_mode", "imputation_metadata_path"),
-      flag_value = c(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace, list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names,
+      flag_value = c(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace, list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names, remove_titles_and_suffix,
                      impute_gender, impute_gender_type, chosen_gender_file,
                      compress_location_whitespace, remove_location_punctuation, convert_location_case, convert_location_to_ascii, extract_postal_codes,
                      file_output,output_non_linkage_fields, chunking_size, read_mode, imputation_metadata_path)
