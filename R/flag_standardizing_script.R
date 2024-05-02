@@ -20,7 +20,7 @@ standardize_names <- function(input_names, flag_lookup_table){
     curr_names <- tolower(curr_names)
 
     # Create a regular expression, then replace all occurences with a blank space
-    reg_exp <- "\\s*\\b(?:mr|jr|sr|dr|ms|iv|iii|ii|i|mrs|esq|hon|prof|st|madam|mister|sir|lord)\\b\\s*"
+    reg_exp <- "\\s*\\b(?:mr|jr|sr|dr|ms|iv|iii|ii|i|mrs|esq|hon|prof|st|madam|mister|sir|lord|rev|apostle)\\b\\s*"
     curr_names <- stri_replace_all_regex(curr_names, reg_exp, "")
 
     # Set back to title case afterwards
