@@ -274,8 +274,30 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           # Add to our processed secondary given names variable before we add it to the data frame
           if (i == 1) {
             processed_middle_names <- curr_secondary_given_names
+
+            if(flag_lookup_table["extract_middle_initial"] == "yes"){
+              # Extract initials without loops
+              initials <- substr(curr_secondary_given_names, 1, 1)
+
+              # Add to the data frame
+              df[["secondary_given_names_initials"]] <- paste(df[["secondary_given_names_initials"]], initials)
+
+              # Trim the data frame column
+              df[["secondary_given_names_initials"]] <- trimws(df[["secondary_given_names_initials"]])
+            }
           } else {
             processed_middle_names <- paste(processed_middle_names, curr_secondary_given_names, sep = " ")
+
+            if(flag_lookup_table["extract_middle_initial"] == "yes"){
+              # Extract initials without loops
+              initials <- substr(curr_secondary_given_names, 1, 1)
+
+              # Add to the data frame
+              df[["secondary_given_names_initials"]] <- paste(df[["secondary_given_names_initials"]], initials)
+
+              # Trim the data frame column
+              df[["secondary_given_names_initials"]] <- trimws(df[["secondary_given_names_initials"]])
+            }
           }
         }
 
@@ -1311,6 +1333,17 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
               curr_name <- standardize_names(split_names[[i]], flag_lookup)
               df[[destination_field_names[i]]] <- paste(df[[destination_field_names[i]]], curr_name, sep = " ")
               df[[destination_field_names[i]]] <- trimws(df[[destination_field_names[i]]])
+
+              if(flag_lookup_table["extract_middle_initial"] == "yes" && destination_field_names[i] == "secondary_given_names"){
+                # Extract initials without loops
+                initials <- substr(curr_name, 1, 1)
+
+                # Add to the data frame
+                df[["secondary_given_names_initials"]] <- paste(df[["secondary_given_names_initials"]], initials)
+
+                # Trim the data frame column
+                df[["secondary_given_names_initials"]] <- trimws(df[["secondary_given_names_initials"]])
+              }
             }
           }
         }
@@ -1487,7 +1520,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       if(imputation_metadata_path != "null"){
         # If the user chose to impute sex, add that information to the metadata
         sex_imputed <- flag_lookup["impute_sex"]
-        if(sex_imputed == "yes"){
+        if(sex_imputed == "yes" && primary_name_col != "" && gender_col != ""){
           # Determine if an existing metadata file is in the output folder, otherwise create a new one
           metadata_file <- file.path(imputation_metadata_path, "imputation_metadata.csv")
           if(!file.exists(metadata_file)){
@@ -2770,11 +2803,11 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
   #----
   # Construct the flag lookup tables for standardization
   flag_values <- data.frame(
-    flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names", "remove_titles_and_suffix",
+    flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names", "remove_titles_and_suffix", "extract_middle_initial",
                   "impute_sex", "impute_sex_type", "chosen_sex_file",
                   "compress_location_whitespace", "remove_location_punctuation", "convert_location_case", "convert_location_to_ascii", "extract_postal_code",
                   "file_output", "output_non_linkage_fields", "chunk_size", "max_file_size_output", "debug_mode", "read_mode", "imputation_metadata_path"),
-    flag_value = c("original", "no", "no", "no", "no", "no", "no", "no",
+    flag_value = c("original", "no", "no", "no", "no", "no", "no", "no", "no",
                    "no", "none", "null",
                    "no", "no", "original", "no", "no",
                    "sqlite", "no", 100000, "null", "off", "path", "null")

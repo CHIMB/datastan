@@ -474,6 +474,7 @@ compile_non_linkage_data <- function(source_data_frame, db_conn, dataset_id){
 #' @param remove_name_punctuation Remove any symbols or punctuation from a person's name. (Options: "yes", "no")
 #' @param compress_name_whitespace Replace name white space with an empty string symbol. (Options: "yes", "no")
 #' @param remove_titles_and_suffix Replace any titles or suffix with an empty string symbol. (Options: "yes", "no")
+#' @param extract_middle_initial Extract the initial from middle names, and put it in an additional column. (Options: "yes", "no")
 #' @param list_all_curr_given_names Combine all given names of a person into an additional column. (Options: "yes", "no")
 #' @param list_all_curr_surnames Combine all surnames of a person into an additional column. (Options: "yes", "no")
 #' @param list_all_curr_names Combine all names of a person into an additional column. (Options: "yes", "no")
@@ -496,7 +497,7 @@ compile_non_linkage_data <- function(source_data_frame, db_conn, dataset_id){
 #' @examples
 #' flags <- create_standardizing_options_lookup(convert_name_case = "upper", impute_sex = "yes", chunk_size = 15000, max_file_size_output = 200)
 #' @export
-create_standardizing_options_lookup <- function(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace, remove_titles_and_suffix,
+create_standardizing_options_lookup <- function(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace, remove_titles_and_suffix, extract_middle_initial,
                                                 list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names,
                                                 impute_sex, impute_sex_type, chosen_sex_file,
                                                 compress_location_whitespace, remove_location_punctuation, convert_location_case, convert_location_to_ascii, extract_postal_code,
@@ -524,6 +525,10 @@ create_standardizing_options_lookup <- function(convert_name_case, convert_name_
   # Remove titles or suffix
   if(missing(remove_titles_and_suffix) || (remove_titles_and_suffix != "yes" && remove_titles_and_suffix != "no"))
     remove_titles_and_suffix <- "no"
+
+  # Extract middle initial
+  if(missing(extract_middle_initial) || (extract_middle_initial != "yes" && extract_middle_initial != "no"))
+    extract_middle_initial <- "no"
 
   # List Given Names
   if(missing(list_all_curr_given_names) || (list_all_curr_given_names != "upper" && list_all_curr_given_names != "lower"))
@@ -607,11 +612,11 @@ create_standardizing_options_lookup <- function(convert_name_case, convert_name_
 
   # Construct the flag lookup tables for standardization [Set this to be in a single source file]
   flag_values <- data.frame(
-    flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names", "remove_titles_and_suffix",
+    flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names", "remove_titles_and_suffix", "extract_middle_initial",
                   "impute_sex", "impute_sex_type", "chosen_sex_file",
                   "compress_location_whitespace", "remove_location_punctuation", "convert_location_case", "convert_location_to_ascii", "extract_postal_code",
                   "file_output","output_non_linkage_fields", "chunk_size", "max_file_size_output", "debug_mode", "read_mode", "imputation_metadata_path"),
-    flag_value = c(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace, list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names, remove_titles_and_suffix,
+    flag_value = c(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace, list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names, remove_titles_and_suffix, extract_middle_initial,
                    impute_sex, impute_sex_type, chosen_sex_file,
                    compress_location_whitespace, remove_location_punctuation, convert_location_case, convert_location_to_ascii, extract_postal_code,
                    file_output, output_non_linkage_fields, chunk_size, max_file_size_output, debug_mode, read_mode, imputation_metadata_path)
