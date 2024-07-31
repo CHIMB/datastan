@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# Automated Data Standardization: An R Package to Facilitate End-to-End Fully Automated Data Linkage <img src="man/figures/chimb_logo.jpg" align="right" height="138" />
+# Automated Data Standardization: An R Package to Facilitate End-to-End Fully Automated Data Linkage
 
 <br><br><br>
 
