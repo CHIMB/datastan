@@ -3,9 +3,7 @@
 
 # Automated Data Standardization: An R Package to Facilitate End-to-End Fully Automated Data Linkage
 
-<br><br><br>
-
-# Introduction
+## Introduction
 
 `datastan` provides an easy and user friendly way for data analysts to
 process data files and manage the standardization rules responsible for
@@ -19,9 +17,9 @@ each dataset by using the standardization rules of the package to
 normalize disparate source files to a common format to ready it for
 record-linkage and analysis.
 
-# Installation
+## Installation
 
-## R Studio Installation
+### R Studio Installation
 
 To install datastan from GitHub, begin by installing and loading the
 `devtools` package:
@@ -38,7 +36,7 @@ using `install_github()`:
 devtools::install_github("CHIMB/datastan")
 ```
 
-## Local Installation
+### Local Installation
 
 To install datastan locally from GitHub, select the most recent release
 from the right-hand tab on the GitHub repository page. Download the
@@ -50,7 +48,7 @@ path_to_pkg <- file.choose() # Select the unmodified package you downloaded from
 devtools::install_local(path_to_pkg)
 ```
 
-# Usage
+## Usage
 
 Before standardizing data can take place, you must enter the
 standardizing rules for the desired columns using the Metadata User
@@ -101,7 +99,7 @@ in one of two ways:
   startDataStandardizationUI()
   ```
 
-# Missing Value Imputation
+## Missing Value Imputation
 
 One of the features of the `datastan` package is the ability to try and
 impute missing values in fields like postal codes and sex. One of the
@@ -127,7 +125,7 @@ look as follows:
 
 Custom CSV Imputation File
 
-# Additional Information & Documentation
+## Additional Information & Documentation
 
 For more details on how the code processes and cleans data, reads from
 the metadata, how the user interfaces work on the back-end, consider
