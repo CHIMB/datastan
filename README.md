@@ -137,3 +137,7 @@ pages of the user interfaces, and how to make changes, or add new
 information to the metadata, consider reading the [<b>User Facing
 Documentation
 (1.5MB)</b>](https://github.com/CHIMB/datastan/blob/main/docs/USER_DOCUMENTATION.pdf).
+
+## Authors
+- [Cole D. Chuchmach](https://github.com/Cole-Chuchmach)
+- [Barret A. Monchka](https://github.com/barretmonchka)
