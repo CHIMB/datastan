@@ -4,7 +4,7 @@ Title: Minimizing Linkage Response Time with User Friendly Standardizing Functio
 Version: 0.7.1
 Authors@R: c(
             person(given=c("Cole", "D."), family="Chuchmach", email="Cole.Chuchmach@umanitoba.ca", role="aut"),
-            person(given=c("Barret", "A.), family="Monchka", email="Barret.Monchka@umanitoba.ca", role="aut")
+            person(given=c("Barret", "A."), family="Monchka", email="Barret.Monchka@umanitoba.ca", role="aut")
           )
 Maintainer: Cole Chuchmach <Cole.Chuchmach@umanitoba.ca>
 Description: The automatic data standardization package is meant to help minimize the time data analysts spend
