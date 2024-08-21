@@ -130,7 +130,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
       #----
       pre_process_phin <- function(phin_field, source_field_ids, df, standardized_col_name) {
 
-        # processed_phins <- character(nrow(df))
+        processed_phins <- character(nrow(df))
 
         for (i in seq_along(phin_field)) {
           # Get the current phin field
@@ -151,17 +151,14 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           # Replace a phin made entirely of '0's with a blank character
           standardized_phins <- gsub("^0+$", "", standardized_phins)
 
-          # Create a column for the standardized phins
-          df[[standardized_col_name]] <- paste(df[[standardized_col_name]], trimws(standardized_phins))
-
-          # if (curr_phin_field == phin_field[1]) {
-          #   processed_phins <- standardized_phins
-          # } else {
-          #   processed_phins <- paste(processed_phins, standardized_phins, sep = " ")
-          # }
+          if (curr_phin_field == phin_field[1]) {
+            processed_phins <- standardized_phins
+          } else {
+            processed_phins <- paste(processed_phins, standardized_phins, sep = " ")
+          }
         }
 
-        # df[[standardized_col_name]] <- trimws(processed_phins) # Removing this for now
+        df[[standardized_col_name]] <- trimws(processed_phins)
         return(df)
       }
 
