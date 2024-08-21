@@ -152,7 +152,7 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
           standardized_phins <- gsub("^0+$", "", standardized_phins)
 
           # Create a column for the standardized phins
-          df[[paste0(standardized_col_name, "_", i)]] <- trimws(standardized_phins)
+          df[[paste0(standardized_col_name)]] <- trimws(standardized_phins)
 
           # if (curr_phin_field == phin_field[1]) {
           #   processed_phins <- standardized_phins
