@@ -82,6 +82,7 @@ standardize_locations <- function(input_locations, flag_lookup_table){
     curr_locations <- stri_replace_all_regex(curr_locations, "\\b(blvd)\\b", "Boulevard", case_insensitive = TRUE)
     curr_locations <- stri_replace_all_regex(curr_locations, "\\b(dr)\\b", "Drive", case_insensitive = TRUE)
     curr_locations <- stri_replace_all_regex(curr_locations, "\\b(ln)\\b", "Lane", case_insensitive = TRUE)
+    curr_locations <- stri_replace_all_regex(curr_locations, "\\b(pl)\\b", "Place", case_insensitive = TRUE)
   }
 
   #-- Second - Remove any punctuation: --#

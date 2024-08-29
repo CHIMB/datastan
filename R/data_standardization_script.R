@@ -2802,11 +2802,11 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
   flag_values <- data.frame(
     flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names", "remove_titles_and_suffix", "extract_middle_initial",
                   "impute_sex", "impute_sex_type", "chosen_sex_file",
-                  "compress_location_whitespace", "remove_location_punctuation", "convert_location_case", "convert_location_to_ascii", "extract_postal_code",
+                  "compress_location_whitespace", "remove_location_punctuation", "convert_location_case", "convert_location_to_ascii", "convert_location_abbreviations", "extract_postal_code",
                   "file_output", "output_non_linkage_fields", "chunk_size", "max_file_size_output", "debug_mode", "read_mode", "imputation_metadata_path"),
     flag_value = c("original", "no", "no", "no", "no", "no", "no", "no", "no",
                    "no", "none", "null",
-                   "no", "no", "original", "no", "no",
+                   "no", "no", "original", "no", "no", "no",
                    "sqlite", "no", 100000, "null", "off", "path", "null")
   )
 
