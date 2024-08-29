@@ -1,7 +1,7 @@
 Package: datastan
 Type: Package
 Title: Minimizing Linkage Response Time with User Friendly Standardizing Functions and Applications
-Version: 0.7.5
+Version: 0.7.6
 Authors@R: c(
             person(given=c("Cole", "D."), family="Chuchmach", email="Cole.Chuchmach@umanitoba.ca", role=c("aut", "cre")),
             person(given=c("Barret", "A."), family="Monchka", email="Barret.Monchka@umanitoba.ca", role="aut")
@@ -25,5 +25,5 @@ Collate:
   'data_standardization_script.R'
   'data_standardization_ui.R'
   'metadata_ui.R'
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 URL: https://github.com/CHIMB/datastan

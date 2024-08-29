@@ -9,6 +9,8 @@ create_standardizing_options_lookup(
   convert_name_to_ascii,
   remove_name_punctuation,
   compress_name_whitespace,
+  remove_titles_and_suffix,
+  extract_middle_initial,
   list_all_curr_given_names,
   list_all_curr_surnames,
   list_all_curr_names,
@@ -19,6 +21,7 @@ create_standardizing_options_lookup(
   remove_location_punctuation,
   convert_location_case,
   convert_location_to_ascii,
+  convert_location_abbreviations,
   extract_postal_code,
   file_output,
   output_non_linkage_fields,
@@ -37,6 +40,10 @@ create_standardizing_options_lookup(
 \item{remove_name_punctuation}{Remove any symbols or punctuation from a person's name. (Options: "yes", "no")}
 
 \item{compress_name_whitespace}{Replace name white space with an empty string symbol. (Options: "yes", "no")}
+
+\item{remove_titles_and_suffix}{Replace any titles or suffix with an empty string symbol. (Options: "yes", "no")}
+
+\item{extract_middle_initial}{Extract the initial from middle names, and put it in an additional column. (Options: "yes", "no")}
 
 \item{list_all_curr_given_names}{Combine all given names of a person into an additional column. (Options: "yes", "no")}
 
@@ -58,6 +65,8 @@ create_standardizing_options_lookup(
 
 \item{convert_location_to_ascii}{Remove diacritics of a location based field. (Options: "yes", "no")}
 
+\item{convert_location_abbreviations}{Expand common abbreviations for locations to reduce variation in addresses. (Options: "yes", "no")}
+
 \item{extract_postal_code}{Attempt to extract postal codes from location based fields and place an additional column. (Options: "yes", "no")}
 
 \item{file_output}{What file output format is desired. (Options: "csv", "rds", "sqlite")}
@@ -73,8 +82,6 @@ create_standardizing_options_lookup(
 \item{read_mode}{Read delimited data using the base file path, or using shell commands? (Options: "path", "cmd")}
 
 \item{imputation_metadata_path}{An output folder where imputation metadata will provide information on sex and postal code imputation}
-
-\item{remove_titles_and_suffix}{Replace any titles or suffix with an empty string symbol. (Options: "yes", "no")}
 }
 \value{
 A lookup table consisting of chosen flags and the assigned default options for bad inputs or undefined choices.

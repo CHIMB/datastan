@@ -73,25 +73,36 @@ standardize_names <- function(input_names, flag_lookup_table){
 standardize_locations <- function(input_locations, flag_lookup_table){
   curr_locations <- input_locations
 
-  #-- First - Remove any punctuation: --#
+  #-- First - Convert common abbreviations to full forms --#
+  convert_abbreviations_value <- flag_lookup_table["convert_location_abbreviations"]
+  if(convert_abbreviations_value == "yes"){
+    curr_locations <- stri_replace_all_regex(curr_locations, "\\b(st)\\b", "Street", case_insensitive = TRUE)
+    curr_locations <- stri_replace_all_regex(curr_locations, "\\b(rd)\\b", "Road", case_insensitive = TRUE)
+    curr_locations <- stri_replace_all_regex(curr_locations, "\\b(ave)\\b", "Avenue", case_insensitive = TRUE)
+    curr_locations <- stri_replace_all_regex(curr_locations, "\\b(blvd)\\b", "Boulevard", case_insensitive = TRUE)
+    curr_locations <- stri_replace_all_regex(curr_locations, "\\b(dr)\\b", "Drive", case_insensitive = TRUE)
+    curr_locations <- stri_replace_all_regex(curr_locations, "\\b(ln)\\b", "Lane", case_insensitive = TRUE)
+  }
+
+  #-- Second - Remove any punctuation: --#
   remove_location_punctuation_value <- flag_lookup_table["remove_location_punctuation"]
   if(remove_location_punctuation_value == "yes"){
     curr_locations <- stri_replace_all_regex(curr_locations, "[-.'[:punct:]]+", " ")
   }
 
-  #-- Second - Remove any white space: --#
+  #-- Third - Remove any white space: --#
   compress_location_whitespace_value <- flag_lookup_table["compress_location_whitespace"]
   if(compress_location_whitespace_value == "yes"){
     curr_locations <- stri_replace_all_regex(curr_locations, " ", "")
   }
 
-  #-- Third - Remove accents or diacritics from names: --#
+  #-- Fourth - Remove accents or diacritics from names: --#
   convert_to_ascii_value <- flag_lookup_table["convert_location_to_ascii"]
   if(convert_to_ascii_value == "yes"){
     curr_locations <- stri_trans_general(curr_locations, "Latin-ASCII")
   }
 
-  #-- Fourth - Convert name case using flag value --#
+  #-- Fifth - Convert name case using flag value --#
   convert_case_value <- flag_lookup_table["convert_location_case"]
   if(convert_case_value == "upper"){
     curr_locations <- stri_trans_toupper(curr_locations)
@@ -485,6 +496,7 @@ compile_non_linkage_data <- function(source_data_frame, db_conn, dataset_id){
 #' @param remove_location_punctuation Remove any symbols or punctuation from location based fields. (Options: "yes", "no")
 #' @param convert_location_case Convert the capitalization of a location based field. (Options: "upper", "lower", "default")
 #' @param convert_location_to_ascii Remove diacritics of a location based field. (Options: "yes", "no")
+#' @param convert_location_abbreviations Expand common abbreviations for locations to reduce variation in addresses. (Options: "yes", "no")
 #' @param extract_postal_code Attempt to extract postal codes from location based fields and place an additional column. (Options: "yes", "no")
 #' @param file_output What file output format is desired. (Options: "csv", "rds", "sqlite")
 #' @param output_non_linkage_fields Output non-linkage fields in a separate file? (Options: "yes", "no")
@@ -500,7 +512,7 @@ compile_non_linkage_data <- function(source_data_frame, db_conn, dataset_id){
 create_standardizing_options_lookup <- function(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace, remove_titles_and_suffix, extract_middle_initial,
                                                 list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names,
                                                 impute_sex, impute_sex_type, chosen_sex_file,
-                                                compress_location_whitespace, remove_location_punctuation, convert_location_case, convert_location_to_ascii, extract_postal_code,
+                                                compress_location_whitespace, remove_location_punctuation, convert_location_case, convert_location_to_ascii, convert_location_abbreviations, extract_postal_code,
                                                 file_output, output_non_linkage_fields, chunk_size, debug_mode, max_file_size_output, read_mode,
                                                 imputation_metadata_path){
 
@@ -576,6 +588,10 @@ create_standardizing_options_lookup <- function(convert_name_case, convert_name_
   if(missing(convert_location_to_ascii) || (convert_location_to_ascii != "yes" && convert_location_to_ascii != "no"))
     convert_location_to_ascii <- "no"
 
+  # Convert short abbreviations to expanded forms
+  if(missing(convert_location_abbreviations) || (convert_location_abbreviations != "yes" && convert_location_abbreviations != "no"))
+    convert_location_abbreviations <- "no"
+
   # Convert Location Based Fields to ASCII
   if(missing(extract_postal_code) || (extract_postal_code != "yes" && extract_postal_code != "no"))
     extract_postal_code <- "no"
@@ -614,11 +630,11 @@ create_standardizing_options_lookup <- function(convert_name_case, convert_name_
   flag_values <- data.frame(
     flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names", "remove_titles_and_suffix", "extract_middle_initial",
                   "impute_sex", "impute_sex_type", "chosen_sex_file",
-                  "compress_location_whitespace", "remove_location_punctuation", "convert_location_case", "convert_location_to_ascii", "extract_postal_code",
+                  "compress_location_whitespace", "remove_location_punctuation", "convert_location_case", "convert_location_to_ascii", "convert_location_abbreviations", "extract_postal_code",
                   "file_output","output_non_linkage_fields", "chunk_size", "max_file_size_output", "debug_mode", "read_mode", "imputation_metadata_path"),
     flag_value = c(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace, list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names, remove_titles_and_suffix, extract_middle_initial,
                    impute_sex, impute_sex_type, chosen_sex_file,
-                   compress_location_whitespace, remove_location_punctuation, convert_location_case, convert_location_to_ascii, extract_postal_code,
+                   compress_location_whitespace, remove_location_punctuation, convert_location_case, convert_location_to_ascii, convert_location_abbreviations, extract_postal_code,
                    file_output, output_non_linkage_fields, chunk_size, max_file_size_output, debug_mode, read_mode, imputation_metadata_path)
   )
 

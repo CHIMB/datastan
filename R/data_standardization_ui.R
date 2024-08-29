@@ -305,6 +305,18 @@ data_standardization_ui <- fluidPage(
                     options = list(container = "body"))
       ),
       div(style = "display: flex; justify-content: center; align-items: center;",
+          selectInput("convert_location_abbreviations", label = "Expand Location Abbreviations?",
+                      choices = list("Yes" = "yes",
+                                     "No" = "no"),
+                      selected = "no", width = validateCssUnit(600)),
+          bsButton("convert_location_abbreviations_help", label = "", icon = icon("question"), style = "info"),
+          bsPopover(id = "convert_location_abbreviations_help", title = "Expand Location Abbreviations - Help",
+                    content = paste("Expand location abbrevations will convert all common abbreviations like <b>St</b> or <b>Rd</b> to their",
+                                    "full form like <b>Street</b> and <b>Road</b>, or not if the user chooses <b>NO</b>."),
+                    placement = "right", trigger = "hover",
+                    options = list(container = "body"))
+      ),
+      div(style = "display: flex; justify-content: center; align-items: center;",
           selectInput("extract_postal_codes", label = "Extract Alternative Postal Codes from Location Fields?",
                       choices = list("Yes" = "yes",
                                      "No" = "no"),
@@ -634,6 +646,7 @@ data_standardization_server <- function(input, output, session){
     remove_location_punctuation <- input$remove_location_punctuation
     convert_location_case <- input$convert_location_case
     convert_location_to_ascii <- input$convert_location_to_ascii
+    convert_location_abbreviations <- input$convert_location_abbreviations
     extract_postal_codes <- input$extract_postal_codes
 
     file_output <- input$file_output
@@ -697,11 +710,11 @@ data_standardization_server <- function(input, output, session){
     flag_values <- data.frame(
       flag_code = c("convert_name_case", "convert_name_to_ascii", "remove_name_punctuation","compress_name_whitespace", "list_all_curr_given_names", "list_all_curr_surnames", "list_all_curr_names", "remove_titles_and_suffix", "extract_middle_initial",
                     "impute_sex", "impute_sex_type", "chosen_sex_file",
-                    "compress_location_whitespace", "remove_location_punctuation", "convert_location_case", "convert_location_to_ascii", "extract_postal_code",
+                    "compress_location_whitespace", "remove_location_punctuation", "convert_location_case", "convert_location_to_ascii", "convert_location_abbreviations", "extract_postal_code",
                     "file_output", "output_non_linkage_fields", "chunk_size", "read_mode", "imputation_metadata_path"),
       flag_value = c(convert_name_case, convert_name_to_ascii, remove_name_punctuation, compress_name_whitespace, list_all_curr_given_names, list_all_curr_surnames, list_all_curr_names, remove_titles_and_suffix, extract_middle_initial,
                      impute_gender, impute_gender_type, chosen_gender_file,
-                     compress_location_whitespace, remove_location_punctuation, convert_location_case, convert_location_to_ascii, extract_postal_codes,
+                     compress_location_whitespace, remove_location_punctuation, convert_location_case, convert_location_to_ascii, convert_location_abbreviations, extract_postal_codes,
                      file_output,output_non_linkage_fields, chunking_size, read_mode, imputation_metadata_path)
     )
     #print(flag_values)
