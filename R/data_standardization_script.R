@@ -2950,11 +2950,25 @@ standardize_data <- function(input_file_path, input_dataset_code, input_flags, o
     clean_db_conn <- dbConnect(RSQLite::SQLite(), clean_file_path)
     df <- dbReadTable(clean_db_conn, 'clean_data_table')
     dbDisconnect(clean_db_conn)
+
+    # If file output is not sqlite, remove it
+    output_type <- flag_lookup["file_output"]
+    if(output_type != "sqlite"){
+      print(paste0("Removing SQLite File: ", clean_file_path))
+      file.remove(clean_file_path)
+    }
+
     return(df)
   }
   else{
+    # If file output is not sqlite, remove it
+    output_type <- flag_lookup["file_output"]
+    if(output_type != "sqlite"){
+      print(paste0("Removing SQLite File: ", clean_file_path))
+      file.remove(clean_file_path)
+    }
+
     print("File is too large to open and return, or a maximum file size was not provided.")
     return(data.frame())
   }
-
 }
