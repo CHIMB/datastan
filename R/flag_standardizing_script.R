@@ -127,6 +127,13 @@ standardize_locations <- function(input_locations, flag_lookup_table){
 #' split_dates <- split_compound_field(c("1960-01-01", "2024-04-04"), c("-", "-"), "separators")
 #' @export
 split_compound_field <- function(compound_field, split_objects, split_type){
+  # Replace special escape characters (like ^) with valid ones
+  for (i in seq_along(split_objects)) {
+      split_pattern <- split_objects[i]
+      split_pattern <- str_replace_all(split_pattern, "(\\^)", "\\\\\\1")
+      split_objects[i] <- split_pattern
+  }
+  
   if(split_type == "separators"){
     compound_field <- t(compound_field)
     name_split <- vector("list", length(split_objects) + 1)
